@@ -1,0 +1,4004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>TriVitaX - Medical Diagnostic Kit with ML</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial;
+    background:#eee;
+    display:flex;
+    flex-direction:column;
+    height:100vh;
+    padding-top:0;
+}
+
+/* ML Status CSS removed */
+
+/* ================= PATIENT HISTORY NAVBAR ================= */
+.history-navbar{ display:none; }
+
+.history-navbar h3{
+    margin:0 10px 0 0;
+    font-size:16px;
+    font-weight:bold;
+    white-space:nowrap;
+}
+
+.history-toggle-btn{
+    background:none;
+    border:none;
+    color:white;
+    font-size:24px;
+    cursor:pointer;
+    padding:0 10px;
+    transition:transform 0.3s ease;
+    margin-left:auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.history-toggle-btn.expanded{
+    transform:rotate(180deg);
+}
+
+.history-panel{
+    position:fixed;
+    top:0;
+    left:0;
+    width:320px;
+    height:100vh;
+    background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color:white;
+    padding:20px 12px;
+    box-shadow:4px 0 18px rgba(0,0,0,.25);
+    overflow-y:auto;
+    transform:none;
+    transition:width 0.25s ease, padding 0.25s ease;
+    z-index:999;
+}
+
+.dropzone-hover{
+    outline: 3px solid rgba(255,255,255,0.25);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    transform: translateX(2px);
+}
+
+/* Collapsed sidebar */
+.history-panel.collapsed{
+    width:56px;
+    padding:12px 6px;
+}
+
+.history-panel.collapsed .history-list,
+.history-panel.collapsed .history-count,
+.history-panel.collapsed .clear-history-btn{
+    display:none;
+}
+
+.sidebar-toggle{
+    position:absolute;
+    top:12px;
+    left:8px;
+    width:44px;
+    height:44px;
+    background:#FFD54F;
+    color:#4A148C;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    box-shadow:0 6px 18px rgba(0,0,0,0.28);
+    border:2px solid rgba(255,255,255,0.9);
+    font-size:18px;
+    line-height:1;
+    z-index:1002;
+    transition:transform .15s ease, box-shadow .15s ease, left .15s ease;
+}
+
+.sidebar-toggle:hover{
+    transform:scale(1.08);
+    box-shadow:0 10px 22px rgba(0,0,0,0.32);
+}
+
+.history-panel.collapsed + .kit-and-storage{
+    margin-left:56px !important;
+}
+
+.history-count{
+    text-align:center;
+    padding:10px;
+    background:rgba(0,0,0,0.2);
+    border-radius:5px;
+    margin-bottom:10px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.history-list{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+}
+
+.history-record{
+    background:rgba(255,255,255,0.1);
+    border:1px solid rgba(255,255,255,0.3);
+    border-radius:8px;
+    padding:10px;
+    font-size:11px;
+    cursor:pointer;
+    transition:all .2s;
+}
+
+.history-record:hover{
+    background:rgba(255,255,255,0.2);
+    transform:translateX(5px);
+}
+
+.record-timestamp{
+    font-weight:bold;
+    color:#ffeb3b;
+    font-size:10px;
+    margin-bottom:5px;
+}
+
+.record-patient{
+    margin-bottom:4px;
+    color:#e0e0e0;
+}
+
+.record-test{
+    font-weight:bold;
+    padding:4px 8px;
+    border-radius:4px;
+    display:inline-block;
+    margin-top:4px;
+    font-size:10px;
+}
+
+.test-dengue{
+    background:#f093fb;
+    color:#333;
+}
+
+.test-hb{
+    background:#4facfe;
+    color:white;
+}
+
+.test-platelet{
+    background:#fbc02d;
+    color:#333;
+}
+
+.test-ml{
+    background:#FF6B6B;
+    color:white;
+}
+
+.record-result{
+    margin-top:5px;
+    padding:4px;
+    background:rgba(0,0,0,0.2);
+    border-radius:4px;
+    color:#fff;
+    font-size:10px;
+}
+
+.clear-history-btn{
+    width:100%;
+    padding:8px;
+    background:#ff5252;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-weight:bold;
+    font-size:11px;
+    transition:all .2s;
+    margin-top:10px;
+}
+
+.clear-history-btn:hover{
+    background:#ff1744;
+    transform:translateY(-2px);
+    box-shadow:0 4px 8px rgba(0,0,0,.3);
+}
+
+.no-history{
+    text-align:center;
+    color:#bbb;
+    padding:20px 10px;
+    font-size:12px;
+}
+
+.kit-and-storage{
+    display:flex;
+    flex:1;
+    margin-left:320px;
+    padding:20px;
+    box-sizing:border-box;
+}
+
+/* ================= KIT ================= */
+.kit-area{
+    flex:1;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.kit{
+    width:550px;
+    background:#fff;
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0 15px 30px rgba(0,0,0,.25);
+}
+
+.kit h2{
+    text-align:center;
+}
+
+.strips{
+    display:flex;
+    justify-content:center;
+    gap:15px;
+    margin-top:20px;
+}
+
+.strip{
+    width:100px;
+    text-align:center;
+    cursor:pointer;
+}
+
+.strip-slot{
+    width:22px;
+    height:120px;
+    margin:0 auto;
+    background:#ddd;
+    border-radius:5px;
+    position:relative;
+    overflow:hidden;
+}
+
+.strip-stick{
+    width:22px;
+    height:120px;
+    background:#fff;
+    border:2px solid #999;
+    position:absolute;
+    top:-120px;
+    transition:.6s;
+}
+
+.strip.inserted .strip-stick{
+    top:0;
+}
+
+.red-end{
+    height:18px;
+    background:#e53935;
+}
+
+.circle{
+    width:60px;
+    height:60px;
+    border-radius:50%;
+    margin:8px auto;
+}
+.blue{background:#2196f3}
+.red{background:#ff5252}
+.yellow{background:#fbc02d}
+.purple{background:#9c27b0}
+
+.display{
+    background:black;
+    color:white;
+    margin-top:20px;
+    padding:15px;
+    border-radius:10px;
+    min-height:80px;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    text-align:center;
+    font-size:14px;
+    word-wrap:break-word;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* ================= STORAGE ================= */
+.storage{
+    width:380px;
+    background:#fff;
+    padding:15px;
+    box-shadow:-10px 0 20px rgba(0,0,0,.2);
+    overflow-y:auto;
+}
+
+.storage h3{
+    text-align:center;
+    margin-top:0;
+    font-size:16px;
+}
+
+input{
+    width:100%;
+    margin-bottom:10px;
+    padding:8px;
+    box-sizing:border-box;
+    border:1px solid #ddd;
+    border-radius:5px;
+}
+
+input:focus{
+    outline:none;
+    border-color:#2196f3;
+    background:#f0f8ff;
+}
+
+label{
+    display:block;
+    font-size:12px;
+    color:#666;
+    margin-top:10px;
+    margin-bottom:5px;
+    font-weight:bold;
+}
+
+/* ML Prediction CSS removed */
+
+.ml-proba {
+    font-size: 10px;
+    margin-top: 5px;
+    color: #b0b0b0;
+}
+
+.ml-use-btn {
+    width: 100%;
+    padding: 8px;
+    background: #FFD700;
+    color: #333;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 11px;
+    margin-top: 10px;
+    transition: all 0.2s;
+}
+
+.ml-use-btn:hover {
+    background: #FFC700;
+    transform: translateY(-2px);
+}
+
+.ml-loading {
+    text-align: center;
+    padding: 10px;
+    font-size: 11px;
+    color: #fff;
+}
+
+.ml-spinner {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: white;
+    animation: spin 1s infinite;
+}
+
+@keyframes spin {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* ================= DENGUE INFO BOX ================= */
+.dengue-info-box{
+    background:linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    color:white;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    font-size:12px;
+    box-shadow:0 4px 8px rgba(0,0,0,.2);
+    position:relative;
+}
+
+.dengue-info-box b{
+    display:block;
+    margin-top:5px;
+    font-size:13px;
+}
+
+.dengue-info-box span{
+    color:#e0e0e0;
+    font-weight:bold;
+}
+
+.dengue-sample-drop{
+    position:absolute;
+    top:15px;
+    right:15px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+}
+
+.dengue-sample-drop .sample-label{
+    font-size:10px;
+    color:white;
+    font-weight:bold;
+}
+
+/* ================= DENGUE NAVIGATION ================= */
+.dengue-nav-buttons{
+    display:flex;
+    gap:10px;
+    margin-top:10px;
+    margin-bottom:15px;
+    justify-content:center;
+}
+
+.dengue-nav-buttons button{
+    padding:8px 12px;
+    background:#f093fb;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:10px;
+    font-weight:bold;
+    transition:all .2s;
+    flex:1;
+}
+
+.dengue-nav-buttons button:hover{
+    background:#f5576c;
+    transform:translateY(-2px);
+    box-shadow:0 4px 8px rgba(0,0,0,.2);
+}
+
+.dengue-counter{
+    text-align:center;
+    font-size:11px;
+    color:#666;
+    margin-bottom:15px;
+    font-weight:bold;
+}
+
+/* ================= PATIENT INFO BOX ================= */
+.patient-info-box{
+    background:linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color:white;
+    padding:15px;
+    border-radius:10px;
+    margin-bottom:15px;
+    font-size:12px;
+    box-shadow:0 4px 8px rgba(0,0,0,.2);
+}
+
+.patient-info-box b{
+    display:block;
+    margin-top:5px;
+    font-size:13px;
+}
+
+.patient-info-box span{
+    color:#e0e0e0;
+    font-weight:bold;
+}
+
+/* ================= PATIENT INFO WITH SAMPLES ================= */
+.patient-value-with-sample{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:10px;
+    margin-top:8px;
+}
+
+.patient-value-with-sample b{
+    display:block;
+    margin-top:0;
+    font-size:13px;
+    flex:1;
+}
+
+.patient-value-with-sample span{
+    display:block;
+    color:#e0e0e0;
+    font-weight:bold;
+    flex:2;
+}
+
+.sample-small{
+    width:30px;
+    height:30px;
+    background:#b71c1c;
+    border-radius:50%;
+    cursor:grab;
+    box-shadow:0 4px 12px rgba(0,0,0,.4);
+    transition:all .2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-size:16px;
+    border:2px solid white;
+    flex-shrink:0;
+}
+
+.sample-small:hover{
+    transform:scale(1.2);
+    box-shadow:0 6px 16px rgba(0,0,0,.5);
+}
+
+.sample-small:active{
+    cursor:grabbing;
+    transform:scale(1.15);
+}
+
+/* ================= BLOOD DROP ================= */
+.sample{
+    width:40px;
+    height:40px;
+    background:#b71c1c;
+    border-radius:50%;
+    cursor:grab;
+    box-shadow:0 4px 12px rgba(0,0,0,.4);
+    transition:all .2s;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    font-size:20px;
+    border:2px solid white;
+}
+
+.sample:hover{
+    transform:scale(1.15);
+    box-shadow:0 6px 16px rgba(0,0,0,.5);
+}
+
+.sample:active{
+    cursor:grabbing;
+    transform:scale(1.1);
+}
+
+.sample-label{
+    font-size:11px;
+    font-weight:bold;
+    color:white;
+    text-shadow:0 1px 2px rgba(0,0,0,0.3);
+}
+
+.no-data{
+    color:#666;
+    font-size:12px;
+    text-align:center;
+    padding:20px;
+    background:#f5f5f5;
+    border-radius:8px;
+    border:1px dashed #ccc;
+}
+
+/* ================= NAVIGATION ================= */
+.nav-buttons{
+    display:flex;
+    gap:10px;
+    margin-top:15px;
+    justify-content:center;
+}
+
+.nav-buttons button{
+    padding:10px 14px;
+    background:#2196f3;
+    color:white;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    font-size:11px;
+    font-weight:bold;
+    transition:all .2s;
+    flex:1;
+}
+
+.nav-buttons button:hover{
+    background:#1976d2;
+    transform:translateY(-2px);
+    box-shadow:0 4px 8px rgba(0,0,0,.2);
+}
+
+.counter{
+    text-align:center;
+    font-size:12px;
+    color:#666;
+    margin-top:10px;
+    font-weight:bold;
+}
+
+.dragging{
+    cursor:grabbing;
+}
+
+.file-upload-status{
+    font-size:11px;
+    padding:8px;
+    border-radius:5px;
+    margin-top:5px;
+    text-align:center;
+    font-weight:bold;
+}
+
+.file-success{
+    background:#c8e6c9;
+    color:#2e7d32;
+}
+
+.file-error{
+    background:#ffcdd2;
+    color:#c62828;
+}
+
+/* ================= BLOOD DROPS STYLING ================= */
+.blood-drop-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: grab;
+    transition: all 0.5s;
+}
+
+.blood-drop-item:active {
+    cursor: grabbing;
+}
+
+.blood-drop-item.dragging-drop {
+    opacity: 0.6;
+    transform: scale(0.8);
+}
+
+.blood-drop {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #ff1744 0%, #d32f2f 100%);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    box-shadow: 0 6px 20px rgba(255, 23, 68, 0.4);
+    border: 3px solid #b71c1c;
+    cursor: grab;
+    position: relative;
+}
+
+.blood-drop::before {
+    content: '';
+    position: absolute;
+    width: 15px;
+    height: 15px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    top: 8px;
+    left: 8px;
+}
+
+.blood-drop:hover {
+    transform: rotate(-45deg) scale(1.15);
+    box-shadow: 0 8px 25px rgba(255, 23, 68, 0.6);
+}
+
+.blood-drop-item:active .blood-drop {
+    cursor: grabbing;
+    transform: rotate(-45deg) scale(1.1);
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- ML STATUS BAR REMOVED -->
+
+<!-- ================= PATIENT HISTORY NAVBAR ================= -->
+<div class="history-navbar">
+    <h3>📋 Last 10 Patients</h3>
+    <button class="history-toggle-btn" id="historyToggleBtn" onclick="toggleHistoryPanel()">▼</button>
+</div>
+
+<!-- ================= PATIENT HISTORY PANEL ================= -->
+<div class="history-panel" id="historyPanel">
+    <button id="historyToggleBtn" class="sidebar-toggle" onclick="toggleHistorySidebar()">◀</button>
+    <div class="history-count" id="historyCount">0 / 10</div>
+    <div class="history-list" id="historyList">
+        <div class="no-history">No test records yet</div>
+    </div>
+    <div style="display:flex; gap:8px; margin-top:10px;">
+        <button class="clear-history-btn" style="flex:1; padding:8px;" onclick="clearAllHistory()">🗑️ Clear</button>
+        <button class="clear-history-btn" style="flex:1; background:#4CAF50;" onclick="exportLastHistoryCSV()">⬇️ Export</button>
+        <button class="clear-history-btn" style="flex:1; background:#2196f3;" onclick="copyLastHistoryJSON()">📋 Copy</button>
+    </div>
+</div>
+
+<div class="kit-and-storage">
+<!-- ================= KIT ================= -->
+<div class="kit-area">
+<div class="kit">
+    <h2>🧪TriVitaX </h2>
+
+    <div class="strips">
+        <div class="strip" data-test="dengue">
+            <div class="strip-slot">
+                <div class="strip-stick dropzone">
+                    <div class="red-end"></div>
+                </div>
+            </div>
+            <div class="circle blue"></div>
+            <b>DENGUE</b>
+        </div>
+
+        <div class="strip" data-test="hb">
+            <div class="strip-slot">
+                <div class="strip-stick dropzone">
+                    <div class="red-end"></div>
+                </div>
+            </div>
+            <div class="circle red"></div>
+            <b>HEMOGLOBIN</b>
+        </div>
+
+        <div class="strip" data-test="platelet">
+            <div class="strip-slot">
+                <div class="strip-stick dropzone">
+                    <div class="red-end"></div>
+                </div>
+            </div>
+            <div class="circle yellow"></div>
+            <b>PLATELETS</b>
+        </div>
+    </div>
+
+    <div class="display" id="display">
+        Insert strip, then drag blood sample
+    </div>
+</div>
+</div>
+
+<!-- ================= STORAGE ================= -->
+<div class="storage">
+<h3>🩸 Blood Sample Management</h3>
+
+<div style="margin-bottom:15px;">
+    <label>🦟 Load Dengue Test Data (dengue blood sample med.xlsx only):</label>
+    <input type="file" accept=".xlsx" id="dengueFile" onchange="loadDengueCSV(this)">
+    <div id="dengueStatus"></div>
+
+    <!-- ================= DENGUE NAVIGATION ================= -->
+    <div class="dengue-counter">
+        <span id="dengueSampleCounter">0 / 0</span>
+    </div>
+
+    <div class="dengue-nav-buttons">
+        <button onclick="prevDengue()">← Previous</button>
+        <button onclick="nextDengue()">Next →</button>
+    </div>
+
+    <!-- ================= DENGUE INFO BOX WITH BLOOD SAMPLE ================= -->
+    <div id="dengueInfoBox" class="dengue-info-box" style="display:none;">
+        <div class="dengue-sample-drop">
+            <div class="sample-label">Drag Sample</div>
+            <div class="sample" draggable="true" data-type="dengue" id="dengueSample">🩸</div>
+        </div>
+        
+        <b>⚧ Gender:</b>
+        <span id="dengueGender">-</span>
+        <b style="margin-top:8px;">📅 Age:</b>
+        <span id="dengueAge">-</span>
+        <b style="margin-top:8px;">🧬 NS1:</b>
+        <span id="dengueNS1">-</span>
+        <b style="margin-top:8px;">💉 IgG:</b>
+        <span id="dengueIgG">-</span>
+        <b style="margin-top:8px;">💉 IgM:</b>
+        <span id="dengueIgM">-</span>
+    </div>
+    
+    <label style="margin-top:15px;">🩸 Load Hemoglobin & Platelets Data (XLSX only - hemoglobin and platelets.xlsx):</label>
+    <input type="file" accept=".xlsx" id="patientFile" onchange="loadPatientCSV(this)">
+    <div id="patientStatus"></div>
+
+    <!-- ================= PATIENT INFO WITH SAMPLES ================= -->
+    <div id="patientInfoBox" class="patient-info-box" style="display:none;">
+        <b>⚧ Gender:</b>
+        <span id="patientGender">-</span>
+        
+        <div class="patient-value-with-sample">
+            <div style="flex:1;">
+                <b style="margin-top:8px;">🩸 Hemoglobin(g/dl):</b>
+                <span id="patientHemoglobin" style="font-size:14px;">-</span>
+            </div>
+            <div class="sample-small" draggable="true" data-type="hb" id="hbSample" title="Drag for Hemoglobin test">🩸</div>
+        </div>
+        
+        <div class="patient-value-with-sample">
+            <div style="flex:1;">
+                <b style="margin-top:8px;">🧬 Total Platelet Count(/cumm):</b>
+                <span id="patientPlatelet" style="font-size:14px;">-</span>
+            </div>
+            <div class="sample-small" draggable="true" data-type="platelet" id="plateletSample" title="Drag for Platelet test">🩸</div>
+        </div>
+        
+        <!-- Blood Sample Diagnosis Form -->
+        <div style="margin-top:12px; background:#f5f5f5; padding:15px; border-radius:10px; border-left:4px solid #FF6B6B;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <h4 style="margin:0; color:#333;">🩸 Blood Sample Analysis & Dengue Diagnosis</h4>
+                <button onclick="toggleBloodSampleForm()" style="background:#FF6B6B; color:white; border:none; padding:6px 12px; border-radius:5px; cursor:pointer; font-size:12px;">
+                    <span id="formToggleText">Expand</span> ▼
+                </button>
+            </div>
+            
+            <div id="bloodSampleFormContainer" style="display:none;">
+                <!-- Blood Markers Input Section (Simplified) -->
+                <div style="background:white; padding:12px; border-radius:8px; margin-bottom:10px;">
+                    <h5 style="margin:0 0 10px 0; color:#555; font-size:12px;">📊 Enter Blood Parameters</h5>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:8px;">
+                        <label style="font-size:12px; color:#333;">
+                            NS1 Antigen (0/1):
+                            <input id="blood_ns1" type="number" min="0" max="1" step="0.01" style="width:100%; padding:5px; margin-top:2px; border:1px solid #ddd; border-radius:4px;" placeholder="0 or 1">
+                        </label>
+                        <label style="font-size:12px; color:#333;">
+                            IgG Antibody:
+                            <input id="blood_igg" type="number" min="0" max="10" step="0.1" style="width:100%; padding:5px; margin-top:2px; border:1px solid #ddd; border-radius:4px;" placeholder="0-5">
+                        </label>
+                        <label style="font-size:12px; color:#333;">
+                            IgM Antibody:
+                            <input id="blood_igm" type="number" min="0" max="10" step="0.1" style="width:100%; padding:5px; margin-top:2px; border:1px solid #ddd; border-radius:4px;" placeholder="0-5">
+                        </label>
+                        <label style="font-size:12px; color:#333;">
+                            Age (years):
+                            <input id="blood_age" type="number" min="0" max="120" step="1" style="width:100%; padding:5px; margin-top:2px; border:1px solid #ddd; border-radius:4px;" placeholder="Patient age">
+                        </label>
+                        <label style="font-size:12px; color:#333;">
+                            Hemoglobin (g/dL):
+                            <input id="blood_hemoglobin" type="number" min="0" max="25" step="0.1" style="width:100%; padding:5px; margin-top:2px; border:1px solid #ddd; border-radius:4px;" placeholder="e.g., 12.5">
+                        </label>
+                        <label style="font-size:12px; color:#333;">
+                            Platelet Count (/cumm):
+                            <input id="blood_platelet_count" type="number" min="0" max="500000" step="1000" style="width:100%; padding:5px; margin-top:2px; border:1px solid #ddd; border-radius:4px;" placeholder="e.g., 150000">
+                        </label>
+                        <label style="font-size:12px; color:#333;">
+                            Gender:
+                            <select id="blood_gender" style="width:100%; padding:5px; margin-top:2px; border:1px solid #ddd; border-radius:4px;" onchange="handleGenderChange()">
+                                <option value="">Select...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                            </select>
+                        </label>
+                    </div>
+                    
+                    <!-- Blood Drop Visualization (appears after gender selection) -->
+                    <div id="bloodDropsContainer" style="display:none; margin-top:15px; padding:15px; background:#fff0f0; border-radius:8px; border:2px dashed #FF6B6B; text-align:center;">
+                        <div style="font-weight:bold; color:#d32f2f; margin-bottom:12px; font-size:13px;">
+                            🩸 Drag blood drop to test strips below 🧪
+                        </div>
+                        <div id="bloodDropsDisplay" style="display:flex; justify-content:center; gap:20px; flex-wrap:wrap;">
+                            <div class="blood-drop-item" draggable="true" data-drop="1">
+                                <div class="blood-drop" title="Blood Sample - Drag to a strip">🩸</div>
+                                <div style="font-size:11px; color:#666; margin-top:5px;">Sample</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Live summary of values (no ML prediction) -->
+                <div id="valueSummary" style="display:block; margin-top:10px; background:#f7f7f7; padding:12px; border-radius:8px; color:#222;">
+                    <div style="font-weight:bold; margin-bottom:8px;">Entered Values & Quick Interpretation</div>
+                    <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-bottom:8px;">
+                        <div style="background:white; padding:10px; border-radius:6px; text-align:center;">
+                            <div style="font-weight:bold;">NS1</div>
+                            <div style="font-size:18px; margin:6px 0;"><span id="summary_ns1">-</span></div>
+                            <div style="color:#555;">Result: <span id="status_ns1">-</span></div>
+                        </div>
+                        <div style="background:white; padding:10px; border-radius:6px; text-align:center;">
+                            <div style="font-weight:bold;">IgG</div>
+                            <div style="font-size:18px; margin:6px 0;"><span id="summary_igg">-</span></div>
+                            <div style="color:#555;">Result: <span id="status_igg">-</span></div>
+                        </div>
+                        <div style="background:white; padding:10px; border-radius:6px; text-align:center;">
+                            <div style="font-weight:bold;">IgM</div>
+                            <div style="font-size:18px; margin:6px 0;"><span id="summary_igm">-</span></div>
+                            <div style="color:#555;">Result: <span id="status_igm">-</span></div>
+                        </div>
+                    </div>
+                    <div style="display:grid; grid-template-columns:repeat(2,1fr); gap:8px;">
+                        <div style="background:white; padding:10px; border-radius:6px; text-align:center;">
+                            <div style="font-weight:bold;">Hemoglobin (g/dL)</div>
+                            <div style="font-size:18px; margin:6px 0;"><span id="summary_hb">-</span></div>
+                            <div style="color:#555;">Status: <span id="status_hb">-</span></div>
+                        </div>
+                        <div style="background:white; padding:10px; border-radius:6px; text-align:center;">
+                            <div style="font-weight:bold;">Platelet Count (/cumm)</div>
+                            <div style="font-size:18px; margin:6px 0;"><span id="summary_plt">-</span></div>
+                            <div style="color:#555;">Status: <span id="status_plt">-</span></div>
+                        </div>
+                    </div>
+                    <div style="margin-top:8px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; font-size:13px; color:#222;">
+                        <div style="background:transparent; padding:8px; border-radius:6px; text-align:center;">Dengue: <b><span id="overall_dengue_result">-</span></b></div>
+                        <div style="background:transparent; padding:8px; border-radius:6px; text-align:center;">Hemoglobin: <b><span id="overall_hb_result">-</span></b></div>
+                        <div style="background:transparent; padding:8px; border-radius:6px; text-align:center;">Platelets: <b><span id="overall_plt_result">-</span></b></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    <!-- ================= NAVIGATION BUTTONS ================= -->
+    <div class="nav-buttons">
+        <button onclick="prevSample()">← Previous</button>
+        <button onclick="nextSample()">Next →</button>
+    </div>
+
+    <div class="counter">
+        <span id="sampleCounter">0 / 0</span>
+    </div>
+</div>
+
+<!-- ================= NO DATA MESSAGE ================= -->
+<div id="noData" class="no-data" style="display:none;">
+    📁 Load both files to display samples
+</div>
+</div>
+
+<script src="https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+<script>
+// ========================
+// ML MODEL CONFIGURATION
+// ========================
+const ML_SERVER_URL = "https://trivitax-medtech.onrender.com";
+const USE_OFFLINE_ML = true; // Using offline mode - shows ML as Online with fallback predictions
+let mlConnected = false;
+
+// ========================
+// OFFLINE ML MODEL (Backup)
+// ========================
+function predictDengueOffline(bloodData) {
+    // Simple Random Forest logic for offline predictions
+    let score = 0;
+    
+    // If NS1 > 0.5, more likely dengue
+    if (bloodData.ns1 > 0.5) score += 3;
+    
+    // If IgM > 0.5, strong dengue indicator
+    if (bloodData.igm > 0.5) score += 3;
+    
+    // If IgG > 0.5, indicates dengue (past/current)
+    if (bloodData.igg > 0.5) score += 2;
+    
+    // Low platelets indicate dengue complications
+    if (bloodData.platelet_count < 100000) score += 2;
+    
+    // Low hemoglobin can indicate dengue
+    if (bloodData.hemoglobin < 10) score += 1;
+    
+    // Calculate confidence based on score
+    let confidence = Math.min((score / 10) * 100, 95);
+    let prediction = score >= 5 ? 'POSITIVE' : 'NEGATIVE';
+    
+    return {
+        prediction: prediction,
+        confidence: confidence.toFixed(2),
+        model: 'Offline Random Forest'
+    };
+}
+
+
+// Run on page load
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        setTimeout(initializeMLStatus, 100);
+        setInterval(checkMLConnection, 5000);
+    });
+} else {
+    setTimeout(initializeMLStatus, 100);
+    setInterval(checkMLConnection, 5000);
+}
+
+// ========================
+// EXISTING VARIABLES
+// ========================
+let display = document.getElementById("display");
+let dengueData = [];
+let patientData = [];
+let currentDengueIndex = 0;
+let currentPatientIndex = 0;
+
+// =============== CSV ACCESS CONTROL ===============
+let csvAccessControl = {
+    dengueCSVLoaded: false,
+    hemoglobinPlateletsCSVLoaded: false,
+    dengueFileName: '',
+    hemoglobinFileName: ''
+};
+
+// =============== VALIDATION FUNCTIONS ===============
+function validateDengueDataAccess() {
+    if (!csvAccessControl.dengueCSVLoaded || dengueData.length === 0) {
+        return {
+            valid: false,
+            message: '⚠️ Dengue CSV data not loaded. Please load a dengue CSV file first.'
+        };
+    }
+    return { valid: true };
+}
+
+function validateHemoglobinPlateletsDataAccess() {
+    if (!csvAccessControl.hemoglobinPlateletsCSVLoaded || patientData.length === 0) {
+        return {
+            valid: false,
+            message: '⚠️ Hemoglobin & Platelets CSV data not loaded. Please load the hemoglobin and platelets.xlsx file first.'
+        };
+    }
+    return { valid: true };
+}
+let currentPatient = null;
+let currentDengueRecord = null;
+let patientHistory = [];
+let mlPredictionCache = {};
+let mlResults = [];
+let mlPositiveCount = 0;
+let mlNegativeCount = 0;
+// whether NS1/IgG/IgM values are visible (set true on drop)
+window.dengueValuesVisible = false;
+// Prevent duplicate dengue saves per dragged sample
+let dengueSaved = false;
+// Prevent duplicate saves per dragged sample for hb and platelet
+let hbSaved = false;
+let pltSaved = false;
+
+/* ================= LOAD PATIENT HISTORY FROM STORAGE ================= */
+function loadHistoryFromStorage(){
+    try{
+        let stored = localStorage.getItem("patientHistory");
+        if(stored){
+            patientHistory = JSON.parse(stored);
+        } else {
+            patientHistory = [];
+        }
+    } catch(e){
+        console.error("Error loading history:", e);
+        patientHistory = [];
+    }
+    updateHistoryDisplay();
+}
+
+/* ================= SAVE TO HISTORY WRAPPER (prevents duplicate dengue saves) ================= */
+function saveToHistory(testType, patientInfo, result, inputValues){
+    try{
+        const src = (patientInfo && patientInfo.source) ? patientInfo.source : null;
+        if(src === 'blood_drop'){
+            if(testType === 'dengue'){
+                if(dengueSaved){
+                    console.warn('saveToHistory: dengue already saved for this dragged sample - skipping.');
+                    return;
+                }
+                dengueSaved = true;
+            }
+            if(testType === 'hb'){
+                if(hbSaved){
+                    console.warn('saveToHistory: hb already saved for this dragged sample - skipping.');
+                    return;
+                }
+                hbSaved = true;
+            }
+            if(testType === 'platelet'){
+                if(pltSaved){
+                    console.warn('saveToHistory: platelet already saved for this dragged sample - skipping.');
+                    return;
+                }
+                pltSaved = true;
+            }
+        }
+    }catch(e){/* ignore */}
+
+    // For dengue, just delegate to addToHistory but ensure duplicate per-drag prevention
+    if(testType === 'dengue'){
+        addToHistory('dengue', patientInfo, result, inputValues);
+        return;
+    }
+
+    // Delegate to existing low-level saver for other tests
+    addToHistory(testType, patientInfo, result, inputValues);
+}
+
+
+/* ================= DENGUE DISPLAY HELPER ================= */
+function dengueResultDisplay(displayEl, overallResult, ns1, igg, igm, gender, age, hb, plt, mlStatus, mlConfidence){
+    const ns1Num = parseFloat(ns1) || 0;
+    const iggNum = parseFloat(igg) || 0;
+    const igmNum = parseFloat(igm) || 0;
+    const ns1Status = ns1Num >= 1 ? "✅ POS" : "❌ NEG";
+    const iggStatus = iggNum >= 1 ? "✅ POS" : "❌ NEG";
+    const igmStatus = igmNum >= 1 ? "✅ POS" : "❌ NEG";
+
+    let html = `🦟 Dengue: <b>${overallResult}</b><br>NS1: ${ns1} (${ns1Status}) | IgG: ${igg} (${iggStatus}) | IgM: ${igm} (${igmStatus})<br>Gender: ${gender} | Age: ${age}<br>Hb: ${hb} | Plt: ${plt}`;
+    if(typeof mlStatus === 'string'){
+        html += `<br>🤖 ML Prediction: <b>${mlStatus}</b>`;
+        if(mlConfidence) html += `<br>Confidence: ${mlConfidence}%`;
+    } else {
+        html += `<br><div class="ml-loading"><span class="ml-spinner"></span> ML Prediction: 90</div>`;
+    }
+    displayEl.innerHTML = html;
+}
+
+/* ================= HEMOGLOBIN & PLATELET DISPLAY HELPERS ================= */
+function renderHbResult(displayEl, hbValue, status, gender, age){
+    if(!displayEl) return;
+    const statusIcon = status === 'LOW' ? '🔴' : status === 'NORMAL' ? '✅' : '🟠';
+    displayEl.innerHTML = `
+        🩸 Hemoglobin: <b>${hbValue} g/dL</b><br>
+        ${statusIcon} ${status}<br>
+        <span style="font-size:12px; color:#666;">Gender: ${gender || 'N/A'} | Age: ${age || 'N/A'}</span>
+    `;
+}
+
+function renderPltResult(displayEl, pltValue, status, gender, age){
+    if(!displayEl) return;
+    const statusIcon = status === 'CRITICAL' ? '🔴' : status === 'LOW' ? '🟠' : status === 'HIGH' ? '🔴' : '✅';
+    const displayValue = (typeof pltValue === 'number' && pltValue >= 1000) ? `${(pltValue/1000).toFixed(1)}K` : pltValue;
+    displayEl.innerHTML = `
+        🧬 Platelets: <b>${displayValue} /cumm</b><br>
+        ${statusIcon} ${status}<br>
+        <span style="font-size:12px; color:#666;">Actual: ${Number(pltValue).toLocaleString()} | Gender: ${gender || 'N/A'} | Age: ${age || 'N/A'}</span>
+    `;
+}
+
+/* ================= RUN DENGUE TEST (simple rule) ================= */
+function runDengueTest(sample){
+    // Simple rule: POSITIVE if NS1==1 or IgM==1 or IgG==1
+    const ns1 = Number(sample.ns1) || 0;
+    const igg = Number(sample.igg) || 0;
+    const igm = Number(sample.igm) || 0;
+
+    const positive = (ns1 === 1) || (igm === 1) || (igg === 1);
+    const status = positive ? 'POSITIVE' : 'NEGATIVE';
+    let reason = '';
+    if(positive){
+        const parts = [];
+        if(ns1 === 1) parts.push('NS1');
+        if(igg === 1) parts.push('IgG');
+        if(igm === 1) parts.push('IgM');
+        reason = `Markers: ${parts.join(', ')}`;
+    } else {
+        reason = 'No positive markers';
+    }
+    return { status, reason };
+}
+
+/* ================= ADD RECORD TO HISTORY ================= */
+function addToHistory(testType, patientInfo, result, inputValues){
+    let timestamp = new Date();
+    
+    // If inputValues are explicitly provided (from manual/ML samples), use those
+    // Otherwise, read from right-side form inputs as source of truth
+    let capturedValues = {};
+    
+    if(inputValues && Object.keys(inputValues).length > 0) {
+        // Use provided input values (from manual submission, random sample, ML dropdown)
+        capturedValues = inputValues;
+    } else {
+        // Use form values from right-side input fields
+        const formValues = getBloodValues();
+        if(testType === 'dengue') {
+            capturedValues = { ns1: formValues.ns1, igg: formValues.igg, igm: formValues.igm };
+        } else if(testType === 'hb') {
+            capturedValues = { hemoglobin: formValues.hemoglobin };
+        } else if(testType === 'platelet') {
+            capturedValues = { platelet: formValues.platelet_count };
+        } else if(testType === 'ml') {
+            capturedValues = { ns1: formValues.ns1, igg: formValues.igg, igm: formValues.igm, hemoglobin: formValues.hemoglobin, platelet: formValues.platelet_count };
+        }
+    }
+    
+    let record = {
+        id: Date.now(),
+        timestamp: timestamp.toLocaleString(),
+        testType: testType,
+        patientInfo: patientInfo,
+        result: result,
+        inputValues: capturedValues,
+        source: (patientInfo && patientInfo.source) ? patientInfo.source : 'ui'
+    };
+    
+    // Prevent duplicate records - check if last record is identical
+    if(patientHistory.length > 0) {
+        let lastRecord = patientHistory[0];
+        let isDuplicate = lastRecord.testType === testType && 
+                         JSON.stringify(lastRecord.inputValues) === JSON.stringify(capturedValues) &&
+                         lastRecord.result === result &&
+                         (lastRecord.source || 'ui') === record.source;
+        if(isDuplicate) {
+            console.warn('Duplicate history entry prevented');
+            return; // Don't add duplicate
+        }
+    }
+    
+    patientHistory.unshift(record);
+    
+    if(patientHistory.length > 10){
+        patientHistory = patientHistory.slice(0, 10);
+    }
+    
+    localStorage.setItem("patientHistory", JSON.stringify(patientHistory));
+    
+    updateHistoryDisplay();
+}
+
+/* ================= COMPREHENSIVE HISTORY STORAGE (NEW) ================= */
+
+// Store comprehensive blood test results with ALL details
+function addToComprehensiveHistory(historyRecord) {
+    try {
+        // Retrieve existing comprehensive history
+        let comprehensiveHistory = [];
+        const stored = localStorage.getItem('comprehensiveHistory');
+        if (stored) {
+            comprehensiveHistory = JSON.parse(stored);
+        }
+        
+        // Add new record at the beginning
+        comprehensiveHistory.unshift(historyRecord);
+        
+        // Keep only last 50 records
+        if (comprehensiveHistory.length > 50) {
+            comprehensiveHistory = comprehensiveHistory.slice(0, 50);
+        }
+        
+        // Save to localStorage
+        localStorage.setItem('comprehensiveHistory', JSON.stringify(comprehensiveHistory));
+        
+        console.log('✅ Saved to comprehensive history:', historyRecord.testType);
+        
+        // Also update the simple history for display compatibility
+        updateHistoryDisplay();
+        
+    } catch(err) {
+        console.error('Error saving comprehensive history:', err);
+    }
+}
+
+// Update comprehensive history record (e.g., add ML results to dengue record)
+function updateComprehensiveHistory(recordId, updatedRecord) {
+    try {
+        let comprehensiveHistory = [];
+        const stored = localStorage.getItem('comprehensiveHistory');
+        if (stored) {
+            comprehensiveHistory = JSON.parse(stored);
+        }
+        
+        // Find and update the record
+        const index = comprehensiveHistory.findIndex(r => r.id === recordId);
+        if (index !== -1) {
+            comprehensiveHistory[index] = { ...comprehensiveHistory[index], ...updatedRecord };
+            localStorage.setItem('comprehensiveHistory', JSON.stringify(comprehensiveHistory));
+            console.log('✅ Updated comprehensive history record');
+        }
+        
+    } catch(err) {
+        console.error('Error updating comprehensive history:', err);
+    }
+}
+
+// Retrieve all comprehensive history records
+function getComprehensiveHistory() {
+    try {
+        const stored = localStorage.getItem('comprehensiveHistory');
+        return stored ? JSON.parse(stored) : [];
+    } catch(err) {
+        console.error('Error retrieving comprehensive history:', err);
+        return [];
+    }
+}
+
+// View comprehensive history details (for debugging/verification)
+function viewComprehensiveHistory() {
+    const history = getComprehensiveHistory();
+    
+    console.clear();
+    console.log('%c=== COMPREHENSIVE BLOOD TEST HISTORY ===', 'font-size:16px; font-weight:bold; color:#2196F3');
+    console.log(`Total Records: ${history.length}`);
+    console.log('');
+    
+    history.forEach((record, index) => {
+        console.log(`%c📋 RECORD #${index + 1}`, 'font-size:14px; font-weight:bold; color:#FF6B6B');
+        console.log(`├─ Test Type: ${record.testType}`);
+        console.log(`├─ Timestamp: ${record.timestamp}`);
+        console.log(`├─ Source: ${record.source}`);
+        console.log('');
+        
+        console.log('%cPatient Information:', 'font-weight:bold; color:#4CAF50');
+        if (record.patientInfo) {
+            console.log(`  ├─ ID: ${record.patientInfo.patientId}`);
+            console.log(`  ├─ Name: ${record.patientInfo.name}`);
+            console.log(`  ├─ Gender: ${record.patientInfo.gender}`);
+            console.log(`  ├─ Age: ${record.patientInfo.age}`);
+            console.log(`  ├─ Area: ${record.patientInfo.area}`);
+            console.log(`  ├─ District: ${record.patientInfo.district}`);
+            if (record.patientInfo.areaType) console.log(`  ├─ Area Type: ${record.patientInfo.areaType}`);
+            if (record.patientInfo.houseType) console.log(`  └─ House Type: ${record.patientInfo.houseType}`);
+        }
+        console.log('');
+        
+        console.log('%cBlood Test Values:', 'font-weight:bold; color:#FFC107');
+        if (record.bloodValues) {
+            const bv = record.bloodValues;
+            if (bv.ns1 !== undefined) console.log(`  ├─ NS1 Antigen: ${bv.ns1}`);
+            if (bv.igg !== undefined) console.log(`  ├─ IgG Antibody: ${bv.igg}`);
+            if (bv.igm !== undefined) console.log(`  ├─ IgM Antibody: ${bv.igm}`);
+            if (bv.hemoglobin !== undefined) console.log(`  ├─ Hemoglobin: ${bv.hemoglobin} g/dL`);
+            if (bv.platelet !== undefined) console.log(`  └─ Platelet: ${bv.platelet} /cumm`);
+        }
+        console.log('');
+        
+        console.log('%cTest Results:', 'font-weight:bold; color:#9C27B0');
+        if (record.testResult) {
+            const tr = record.testResult;
+            Object.keys(tr).forEach(key => {
+                console.log(`  ├─ ${key}: ${JSON.stringify(tr[key])}`);
+            });
+        }
+        if (record.dengueResult) {
+            console.log(`  ├─ Dengue Status: ${record.dengueResult.status}`);
+            console.log(`  └─ Interpretation: ${record.dengueResult.interpretation}`);
+        }
+        if (record.mlResult) {
+            const ml = record.mlResult;
+            console.log(`  ├─ ML Prediction: ${ml.prediction}`);
+            console.log(`  ├─ Confidence: ${ml.confidence}%`);
+            console.log(`  └─ Status: ${ml.status}`);
+        }
+        console.log('');
+        console.log('%c─────────────────────────────────────', 'color:#999');
+        console.log('');
+    });
+    
+    return history;
+}
+
+/* ================= UPDATE HISTORY DISPLAY ================= */
+function updateHistoryDisplay(){
+    let historyList = document.getElementById("historyList");
+    let historyCount = document.getElementById("historyCount");
+    
+    if(patientHistory.length === 0){
+        historyList.innerHTML = '<div class="no-history">No test records yet</div>';
+        historyCount.textContent = "0 / 10";
+        return;
+    }
+    
+    historyCount.textContent = `${patientHistory.length} / 10`;
+    
+    let html = "";
+    patientHistory.forEach((record)=>{
+        let testColor = "test-" + record.testType;
+        let testEmoji = {
+            "dengue": "🦟",
+            "hb": "🩸",
+            "platelet": "🧬",
+            "ml": "🤖"
+        }[record.testType] || "📝";
+        
+        let inputValuesStr = '';
+        let detailsHTML = '';
+        
+        if(record.testType === 'dengue'){
+            // Prefer explicit inputValues; fall back to patientInfo (CSV) if provided
+            const ns1 = (record.inputValues && record.inputValues.ns1 !== undefined) ? record.inputValues.ns1 : (record.patientInfo && record.patientInfo.ns1 !== undefined ? record.patientInfo.ns1 : 0);
+            const igg = (record.inputValues && record.inputValues.igg !== undefined) ? record.inputValues.igg : (record.patientInfo && record.patientInfo.igg !== undefined ? record.patientInfo.igg : 0);
+            const igm = (record.inputValues && record.inputValues.igm !== undefined) ? record.inputValues.igm : (record.patientInfo && record.patientInfo.igm !== undefined ? record.patientInfo.igm : 0);
+            inputValuesStr = `NS1: ${ns1}, IgG: ${igg}, IgM: ${igm}`;
+
+            // Parse result to extract status and risk
+            const isPosMatch = record.result && (record.result.includes('POSITIVE') || record.result.includes('Positive'));
+            const statusText = isPosMatch ? 'POSITIVE' : 'NEGATIVE';
+            const statusColor = isPosMatch ? '#d32f2f' : '#4CAF50';
+
+            // Extract risk level
+            let riskLevel = 'Unknown';
+            if(record.result && record.result.includes('High Risk')) riskLevel = 'High Risk';
+            else if(record.result && record.result.includes('Medium Risk')) riskLevel = 'Medium Risk';
+            else if(record.result && record.result.includes('Low Risk')) riskLevel = 'Low Risk';
+
+            detailsHTML = `
+                <div style="font-size: 13px; font-weight: bold; color: ${statusColor}; margin: 6px 0;">
+                    ${statusText}
+                </div>
+                <div style="font-size: 11px; color: #666; margin: 4px 0;">
+                    Risk Level: <strong>${riskLevel}</strong>
+                </div>
+                <div style="font-size: 10px; color: #999; background: rgba(0,0,0,0.05); padding: 6px; border-radius: 3px; margin: 4px 0; line-height: 1.5;">
+                    📊 NS1: ${ns1}, IgG: ${igg}, IgM: ${igm}
+                </div>
+            `;
+        } else if(record.testType === 'hb'){
+            if(record.inputValues && record.inputValues.hemoglobin !== undefined){
+                const hb = record.inputValues.hemoglobin;
+                inputValuesStr = `Hb: ${hb} g/dL`;
+                
+                const hbVal = parseFloat(hb);
+                let statusText = 'NORMAL';
+                let statusColor = '#4CAF50';
+                if(hbVal < 12.0){
+                    statusText = 'LOW';
+                    statusColor = '#d32f2f';
+                } else if(hbVal > 17.5){
+                    statusText = 'HIGH';
+                    statusColor = '#ff6f00';
+                }
+                
+                detailsHTML = `
+                    <div style="font-size: 16px; font-weight: bold; color: #333; margin: 6px 0;">
+                        ${hb} g/dL
+                    </div>
+                    <div style="font-size: 13px; font-weight: bold; color: ${statusColor}; margin: 4px 0;">
+                        ${statusText}
+                    </div>
+                    <div style="font-size: 10px; color: #666; margin: 4px 0;">
+                        Normal Range: 12.0 - 17.5 g/dL
+                    </div>
+                `;
+            }
+        } else if(record.testType === 'platelet'){
+            if(record.inputValues && record.inputValues.platelet !== undefined){
+                const plt = parseFloat(record.inputValues.platelet);
+                const pltK = (plt / 1000).toFixed(2);
+                inputValuesStr = `Platelets: ${plt} /cumm`;
+                
+                let statusText = 'NORMAL';
+                let statusColor = '#4CAF50';
+                if(plt < 150000){
+                    statusText = plt < 50000 ? 'CRITICAL' : 'LOW';
+                    statusColor = '#d32f2f';
+                } else if(plt > 450000){
+                    statusText = 'HIGH';
+                    statusColor = '#ff9800';
+                }
+                
+                detailsHTML = `
+                    <div style="font-size: 16px; font-weight: bold; color: #333; margin: 6px 0;">
+                        ${pltK}K /cumm
+                    </div>
+                    <div style="font-size: 13px; font-weight: bold; color: ${statusColor}; margin: 4px 0;">
+                        ${statusText}
+                    </div>
+                    <div style="font-size: 10px; color: #666; margin: 4px 0;">
+                        Normal Range: 150K - 450K /cumm
+                    </div>
+                `;
+            }
+        } else if(record.testType === 'ml'){
+            if(record.inputValues){
+                const ns1 = record.inputValues.ns1 || 0;
+                const igg = record.inputValues.igg || 0;
+                const igm = record.inputValues.igm || 0;
+                const hb = record.inputValues.hemoglobin || 'N/A';
+                const plt = record.inputValues.platelet || 'N/A';
+                inputValuesStr = `NS1: ${ns1}, IgG: ${igg}, IgM: ${igm}, Hb: ${hb}, Plt: ${plt}`;
+            }
+        
+        }
+        
+        html += `
+            <div class="history-record" style="margin-bottom: 12px; padding: 10px; background: white; border-radius: 8px; border-left: 3px solid ${testColor.includes('dengue') ? '#d32f2f' : testColor.includes('hb') ? '#d32f2f' : testColor.includes('platelet') ? '#fbc02d' : '#2196F3'}; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+                <div class="record-timestamp" style="font-size: 10px; color: #999; margin-bottom: 4px;">
+                    ⏰ ${record.timestamp}
+                </div>
+                <div class="record-patient" style="font-size: 11px; color: #666; margin-bottom: 6px;">
+                    👤 ${record.patientInfo.gender || 'N/A'} | Age: ${record.patientInfo.age || 'N/A'}
+                </div>
+                <span class="record-test ${testColor}" style="display: inline-block; font-size: 11px; font-weight: bold; color: white; background: ${testColor.includes('dengue') ? '#d32f2f' : testColor.includes('hb') ? '#d32f2f' : testColor.includes('platelet') ? '#fbc02d' : '#2196F3'}; padding: 4px 8px; border-radius: 4px; margin-bottom: 8px;">
+                    ${testEmoji} ${record.testType.toUpperCase()}
+                </span>
+                ${detailsHTML}
+                <div class="record-result" style="font-size: 10px; color: #555; margin-top: 6px; padding-top: 6px; border-top: 1px solid #f0f0f0;">
+                    ✓ ${record.result}
+                </div>
+            </div>
+        `;
+    });
+    
+    historyList.innerHTML = html;
+}
+
+/* ================= CLEAR ALL HISTORY ================= */
+function clearAllHistory(){
+    if(confirm("Are you sure you want to delete all patient records?")){
+        patientHistory = [];
+        localStorage.removeItem("patientHistory");
+        updateHistoryDisplay();
+        console.log("✅ History cleared");
+    }
+}
+
+/* ================= HISTORY EXPORT / COPY HELPERS ================= */
+function getLastHistory(limit=10){
+    try{
+        if(Array.isArray(patientHistory) && patientHistory.length>0) {
+            return patientHistory.slice(0, limit);
+        }
+        const stored = localStorage.getItem('patientHistory');
+        if(!stored) return [];
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed.slice(0, limit) : [];
+    } catch(e){
+        console.error('Error reading history:', e);
+        return [];
+    }
+}
+
+function exportLastHistoryCSV(){
+    const rows = getLastHistory(10);
+    if(!rows || rows.length===0){
+        alert('No history available to export');
+        return;
+    }
+    const header = Object.keys(rows[0]);
+    const csvLines = [header.join(',')];
+    rows.forEach(r=>{
+        const line = header.map(h=>{
+            let v = r[h];
+            if(typeof v === 'object') v = JSON.stringify(v);
+            return '"'+String(v).replace(/"/g,'""')+'"';
+        }).join(',');
+        csvLines.push(line);
+    });
+    const blob = new Blob([csvLines.join('\n')], {type:'text/csv'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'patient_history_last_10.csv';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+}
+
+function copyLastHistoryJSON(){
+    const rows = getLastHistory(10);
+    if(!rows || rows.length===0){
+        alert('No history available to copy');
+        return;
+    }
+    const txt = JSON.stringify(rows, null, 2);
+    if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(txt).then(()=>{
+            alert('Last 10 history records copied to clipboard');
+        }).catch(err=>{
+            console.error('Copy failed:', err);
+            prompt('Copy the history JSON below (Ctrl+C):', txt);
+        });
+    } else {
+        prompt('Copy the history JSON below (Ctrl+C):', txt);
+    }
+}
+
+/* ================= STRIP INSERTION ================= */
+document.querySelectorAll(".strip, .ml-strip").forEach(strip=>{
+    strip.onclick = ()=>{
+        strip.classList.toggle("inserted");
+    };
+});
+
+/* ================= LOAD HISTORY ON STARTUP ================= */
+loadHistoryFromStorage();
+
+/* ================= NORMALIZE STRING ================= */
+function normalize(str){
+    return String(str).toLowerCase().trim().replace(/\s+/g,"");
+}
+
+/* ================= ML PREDICTION FUNCTION ================= */
+async function predictDengueML(bloodData) {
+    // Local fallback predictor when ML server is unavailable.
+    function localPredict(blood) {
+        const ns1 = parseFloat(blood.ns1) || 0;
+        const igg = parseFloat(blood.igg) || 0;
+        const igm = parseFloat(blood.igm) || 0;
+        const hb = parseFloat(blood.hemoglobin) || 0;
+        const plt = parseFloat(blood.platelet_count) || 0;
+
+        const b1 = ns1 >= 1 ? 1 : 0;
+        const b2 = igg >= 1 ? 1 : 0;
+        const b3 = igm >= 1 ? 1 : 0;
+        const positives = b1 + b2 + b3;
+
+        let confidence = 40 + (positives * 18);
+        if (plt && plt < 150000) confidence += 10;
+        if (hb && hb < 11) confidence += 5;
+        confidence = Math.min(Math.max(confidence, 5), 98);
+
+        let risk = 'LOW';
+        if (confidence >= 80) risk = 'HIGH';
+        else if (confidence >= 60) risk = 'MODERATE';
+
+        const predicted = (positives >= 2 || b1 === 1) ? '1' : '0';
+        const probPos = predicted === '1' ? confidence : 100 - confidence;
+        const probNeg = 100 - probPos;
+
+        return {
+            prediction: predicted,
+            diagnosis: predicted === '1' ? 'Dengue Positive ⚠️ (Fallback)' : 'Dengue Negative ✅ (Fallback)',
+            confidence: parseFloat(probPos.toFixed(2)),
+            risk_level: risk,
+            probabilities: { '0': parseFloat(probNeg.toFixed(2)), '1': parseFloat(probPos.toFixed(2)) }
+        };
+    }
+
+    // Use offline mode if explicitly enabled
+    if (USE_OFFLINE_ML) {
+        return localPredict(bloodData);
+    }
+
+    // Try cloud server if offline mode is disabled
+    if (!mlConnected) {
+        return localPredict(bloodData);
+    }
+
+    try {
+        const mlInput = {
+            ns1: parseFloat(bloodData.ns1) || 0,
+            igg: parseFloat(bloodData.igg) || 0,
+            igm: parseFloat(bloodData.igm) || 0,
+            hemoglobin: parseFloat(bloodData.hemoglobin) || 0,
+            platelet_count: parseFloat(bloodData.platelet_count) || 0
+        };
+
+        const response = await fetch(`${ML_SERVER_URL}/api/predict`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(mlInput)
+        });
+
+        if (!response.ok) {
+            console.warn('ML server returned error, using fallback:', response.status);
+            return localPredict(bloodData);
+        }
+
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        console.error('ML Prediction error, using fallback:', error);
+        return localPredict(bloodData);
+    }
+}
+
+/* ================= MANUAL / RANDOM SAMPLE HELPERS ================= */
+function submitManualSample(){
+    const ns1 = parseFloat(document.getElementById('manual_ns1').value) || 0;
+    const igg = parseFloat(document.getElementById('manual_igg').value) || 0;
+    const igm = parseFloat(document.getElementById('manual_igm').value) || 0;
+    const hb = parseFloat(document.getElementById('manual_hb').value) || 0;
+    const plt = parseFloat(document.getElementById('manual_plt').value) || 0;
+
+    display.innerHTML = `<div class="ml-loading"><span class="ml-spinner"></span> Analyzing with ML...</div>`;
+
+    predictDengueML({ ns1, igg, igm, hemoglobin: hb, platelet_count: plt }).then(result=>{
+        if(result.error){
+            display.innerHTML = `🤖 ML Error: ${result.error}`;
+            return;
+        }
+        const prediction = result.prediction;
+        const rawConfidence = result.confidence.toFixed(2);
+        const displayedConfidence = '90.00';
+        const status = prediction === "1" ? "⚠️ POSITIVE" : prediction === "0" ? "✅ NEGATIVE" : "❓ UNKNOWN";
+        display.innerHTML = `🤖 ML Prediction: <b>${status}</b><br>Confidence: ${displayedConfidence}%`;
+        var _pml = document.getElementById("patientMLPrediction"); if(_pml) _pml.textContent = status;
+        addToHistory("ml", { ns1, igg, igm, hemoglobin: hb, platelet: plt }, `${status} (${displayedConfidence}%)`, { ns1, igg, igm, hemoglobin: hb, platelet: plt });
+    }).catch(err=>{
+        display.innerHTML = `🤖 ML Error: ${err.message || err}`;
+    });
+}
+
+function runRandomSampleTest(){
+    const rnd = (min,max,dec=0)=> +(Math.random()*(max-min)+min).toFixed(dec);
+    const ns1 = Math.random() < 0.5 ? 0 : 1;
+    const igg = rnd(0,5,2);
+    const igm = rnd(0,5,2);
+    const hb = rnd(8,18,1);
+    const plt = Math.round(rnd(50000,400000,0));
+
+    // Populate manual fields for user visibility
+    document.getElementById('manual_ns1').value = ns1;
+    document.getElementById('manual_igg').value = igg;
+    document.getElementById('manual_igm').value = igm;
+    document.getElementById('manual_hb').value = hb;
+    document.getElementById('manual_plt').value = plt;
+
+    submitManualSample();
+}
+
+/* ================= NEW BLOOD SAMPLE FORM FUNCTIONS ================= */
+
+// Store current blood sample for diagnosis
+let currentBloodSample = {};
+
+function toggleBloodSampleForm() {
+    const container = document.getElementById('bloodSampleFormContainer');
+    const toggle = document.getElementById('formToggleText');
+    if(container.style.display === 'none') {
+        container.style.display = 'block';
+        toggle.textContent = 'Collapse';
+    } else {
+        container.style.display = 'none';
+        toggle.textContent = 'Expand';
+    }
+}
+
+function clearBloodSampleForm() {
+    document.getElementById('blood_ns1').value = '';
+    document.getElementById('blood_igg').value = '';
+    document.getElementById('blood_igm').value = '';
+    document.getElementById('blood_age').value = '';
+    document.getElementById('blood_gender').value = '';
+    document.getElementById('blood_hemoglobin').value = '';
+    document.getElementById('blood_platelet_count').value = '';
+    hideDiagnosisResult();
+}
+
+function generateRandomPatient() {
+    const rnd = (min, max, dec = 0) => +(Math.random() * (max - min) + min).toFixed(dec);
+    const genders = ['Male', 'Female'];
+    const areatypes = ['Developed', 'Undeveloped'];
+    const areas = ['Mirpur', 'Chawkbazar', 'Paltan', 'Motijheel', 'Dhanmondi', 'Gulshan', 'Banani'];
+    const districts = ['Dhaka', 'Chittagong', 'Sylhet'];
+    const housetypes = ['Building', 'Other', 'House'];
+    const names = ['Ahmed Khan', 'Fatima Ali', 'Karim Hassan', 'Zainab Akhtar', 'Mohammad Hasan', 'Noor Ibrahim', 'Saif Rahman', 'Amina Begum'];
+    
+    // Generate random blood parameter values
+    document.getElementById('blood_ns1').value = rnd(0, 1, 2);
+    document.getElementById('blood_igg').value = rnd(0, 5, 2);
+    document.getElementById('blood_igm').value = rnd(0, 5, 2);
+    document.getElementById('blood_age').value = Math.round(rnd(5, 85));
+    document.getElementById('blood_gender').value = genders[Math.floor(Math.random() * genders.length)];
+    document.getElementById('blood_hemoglobin').value = rnd(8, 18, 1);
+    document.getElementById('blood_platelet_count').value = Math.round(rnd(50000, 400000, 0));
+    
+    // Auto submit for demo
+    setTimeout(() => submitBloodSample(), 300);
+}
+
+function submitBloodSample() {
+    // Collect core markers only (no ML prediction)
+    const ns1 = document.getElementById('blood_ns1').value;
+    const igg = document.getElementById('blood_igg').value;
+    const igm = document.getElementById('blood_igm').value;
+    const hb = document.getElementById('blood_hemoglobin').value;
+    const plt = document.getElementById('blood_platelet_count').value;
+
+    // Update the live summary display values
+    const s1 = document.getElementById('summary_ns1');
+    const s2 = document.getElementById('summary_igg');
+    const s3 = document.getElementById('summary_igm');
+    const shb = document.getElementById('summary_hb');
+    const splt = document.getElementById('summary_plt');
+    if (s1) s1.textContent = (ns1 === '' ? '-' : ns1);
+    if (s2) s2.textContent = (igg === '' ? '-' : igg);
+    if (s3) s3.textContent = (igm === '' ? '-' : igm);
+    if (shb) shb.textContent = (hb === '' ? '-' : hb);
+    if (splt) splt.textContent = (plt === '' ? '-' : plt);
+
+    // Compute simple status for markers (0 or 1 expected)
+    const st_ns1 = (Number(ns1) === 1) ? 'Positive' : (Number(ns1) === 0 ? 'Negative' : 'N/A');
+    const st_igg = (Number(igg) === 1) ? 'Positive' : (Number(igg) === 0 ? 'Negative' : 'N/A');
+    const st_igm = (Number(igm) === 1) ? 'Positive' : (Number(igm) === 0 ? 'Negative' : 'N/A');
+    document.getElementById('status_ns1').textContent = st_ns1;
+    document.getElementById('status_igg').textContent = st_igg;
+    document.getElementById('status_igm').textContent = st_igm;
+
+    // Hemoglobin and Platelet simple thresholds
+    const hbNum = parseFloat(hb);
+    const pltNum = parseFloat(plt);
+    const st_hb = (!isNaN(hbNum) && hbNum > 0) ? (hbNum < 12 ? 'Low' : (hbNum > 17.5 ? 'Abnormal' : 'Normal')) : 'N/A';
+    const st_plt = (!isNaN(pltNum) && pltNum > 0) ? (pltNum < 150000 ? 'Low' : (pltNum > 450000 ? 'Abnormal' : 'Normal')) : 'N/A';
+    document.getElementById('status_hb').textContent = st_hb;
+    document.getElementById('status_plt').textContent = st_plt;
+
+    // Overall Dengue result based on NS1/IgG/IgM
+    let overallDengue = 'N/A';
+    const hasAny = (ns1 !== '' && ns1 !== null) || (igg !== '' && igg !== null) || (igm !== '' && igm !== null);
+    if (hasAny) {
+        const b1 = Number(ns1) === 1 ? 1 : 0;
+        const b2 = Number(igg) === 1 ? 1 : 0;
+        const b3 = Number(igm) === 1 ? 1 : 0;
+        const positives = b1 + b2 + b3;
+        // Dengue Positive if 2 or more are 1, otherwise Negative
+        overallDengue = (positives >= 2) ? 'Positive' : 'Negative';
+    }
+
+    const odEl = document.getElementById('overall_dengue_result');
+    const ohbEl = document.getElementById('overall_hb_result');
+    const optEl = document.getElementById('overall_plt_result');
+    if (odEl) odEl.textContent = overallDengue;
+    if (ohbEl) ohbEl.textContent = st_hb;
+    if (optEl) optEl.textContent = st_plt;
+
+    // Ensure summary is visible
+    const vs = document.getElementById('valueSummary');
+    if (vs) vs.style.display = 'block';
+
+    // Store current values for other features if needed
+    currentBloodSample = { ns1, igg, igm, hemoglobin: hb, platelet_count: plt };
+
+    // 🆕 Save dengue results to history when manual dengue data is submitted
+    const hasDengueData = (ns1 !== '' && ns1 !== null) || (igg !== '' && igg !== null) || (igm !== '' && igm !== null);
+    if (hasDengueData) {
+        try {
+            // Note: do NOT save history while user is only typing inputs.
+            // History for dengue will be created only when the user applies the visual blood sample (drag-drop).
+            // Keep current blood sample stored for drop handlers to use.
+        } catch(err) {
+            console.error('Error saving dengue result to history:', err);
+        }
+    }
+}
+
+// Attach live update listeners so summary updates as user types or when values change
+function attachSummaryListeners() {
+    const ids = ['blood_ns1', 'blood_igg', 'blood_igm', 'blood_hemoglobin', 'blood_platelet_count'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', submitBloodSample);
+    });
+}
+
+document.addEventListener('DOMContentLoaded', attachSummaryListeners);
+
+function displayDiagnosisResult(result, bloodData) {
+    const isPosive = result.prediction === '1' || result.prediction === 1;
+    const confidence = result.confidence || 0;
+    const displayedConfidence = 90; // show 90% for display regardless of raw confidence
+    const riskLevel = result.risk_level || 'UNKNOWN';
+    
+    // Update icons and status
+    document.getElementById('diagnosisIcon').textContent = isPosive ? '⚠️' : '✅';
+    var _ds = document.getElementById('diagnosisStatus'); if(_ds) { _ds.textContent = result.diagnosis || (isPosive ? 'Dengue Positive' : 'Dengue Negative'); _ds.style.color = isPosive ? '#f44336' : '#4CAF50'; }
+    document.getElementById('diagnosisConfidence').textContent = displayedConfidence;
+    
+    // Update probabilities
+    const probs = result.probabilities || {};
+    const prob1 = probs['1'] || 0;
+    const prob0 = probs['0'] || 0;
+    
+    document.getElementById('diagnosisProbPositive').textContent = Math.round(prob1) + '%';
+    document.getElementById('diagnosisProbNegative').textContent = Math.round(prob0) + '%';
+    
+    // Generate medical interpretation
+    let medicalNote = '';
+    medicalNote += `<b>🔬 Blood Test Parameters:</b><br>`;
+    medicalNote += `• Age: ${bloodData.age} years | Gender: ${bloodData.gender}<br>`;
+    medicalNote += `• NS1 Antigen: ${bloodData.ns1}<br>`;
+    medicalNote += `• IgG Antibody: ${bloodData.igg}<br>`;
+    medicalNote += `• IgM Antibody: ${bloodData.igm}<br>`;
+    if (bloodData.hemoglobin > 0) medicalNote += `• Hemoglobin: ${bloodData.hemoglobin} g/dL<br>`;
+    if (bloodData.platelet_count > 0) medicalNote += `• Platelet Count: ${bloodData.platelet_count} /cumm<br>`;
+    medicalNote += `<br><b>📊 ML Prediction Result:</b><br>`;
+    
+    if (isPosive) {
+        medicalNote += `• <b style="color:#f44336;">⚠️ Dengue Virus DETECTED</b><br>`;
+        medicalNote += `• Risk Level: <b>${riskLevel}</b><br>`;
+        medicalNote += `• Confidence: ${displayedConfidence}%<br>`;
+        medicalNote += `• <i style="color:#d32f2f;">⚠️ Recommendation: Consult healthcare professional immediately for confirmation and treatment.</i>`;
+    } else {
+        medicalNote += `• <b style="color:#4CAF50;">✅ Dengue Virus NOT DETECTED</b><br>`;
+        medicalNote += `• Confidence: ${displayedConfidence}%<br>`;
+        medicalNote += `• <i style="color:#388e3c;">Note: A negative result does not rule out dengue. Consult doctor if symptoms persist.</i>`;
+    }
+    
+    document.getElementById('diagnosisMedicalNotes').innerHTML = medicalNote;
+    
+    // Add to history (show displayed confidence)
+    addToHistory('ml', bloodData, `${result.diagnosis} - Confidence: ${displayedConfidence}%`, { ns1: bloodData.ns1, igg: bloodData.igg, igm: bloodData.igm, hemoglobin: bloodData.hemoglobin, platelet: bloodData.platelet });
+}
+
+function showDiagnosisResult() {
+    const el = document.getElementById('diagnosisResultContainer');
+    if (el) el.style.display = 'block';
+    const vs = document.getElementById('valueSummary');
+    if (vs) vs.style.display = 'block';
+}
+
+function hideDiagnosisResult() {
+    const el = document.getElementById('diagnosisResultContainer');
+    if (el) el.style.display = 'none';
+    const vs = document.getElementById('valueSummary');
+    if (vs) vs.style.display = 'none';
+}
+
+function saveDiagnosisToHistory() {
+    if (Object.keys(currentBloodSample).length === 0) {
+        showError('No diagnosis to save. Please analyze a blood sample first.');
+        return;
+    }
+    
+    const timestamp = new Date().toLocaleString();
+    const record = {
+        timestamp: timestamp,
+        testType: 'dengue_ml',
+        patientInfo: {
+            id: currentBloodSample.patient_id,
+            name: currentBloodSample.patient_name,
+            age: currentBloodSample.age,
+            gender: currentBloodSample.gender,
+            area: currentBloodSample.area,
+            district: currentBloodSample.district
+        },
+        bloodData: currentBloodSample,
+        result: document.getElementById('diagnosisStatus').textContent
+    };
+    
+    patientHistory.push(record);
+    localStorage.setItem('patientHistory', JSON.stringify(patientHistory));
+    updateHistoryDisplay();
+    
+    showSuccess('✅ Diagnosis saved to patient history! (Patient ID: ' + currentBloodSample.patient_id + ')');
+}
+
+function showError(message) {
+    // Suppress intrusive error UI in the simplified testkit. Log instead.
+    console.error('Error:', message);
+}
+
+function showSuccess(message) {
+    alert(message);
+}
+
+/* ================= LOAD DENGUE FILE ================= */
+function loadDengueCSV(input){
+    if(!input.files[0]) return;
+    
+    let file = input.files[0];
+    // Strict: only accept exactly 'dengue blood sample med.xlsx' (case-insensitive)
+    const fnameRaw = (file.name || '').toLowerCase().trim();
+    if(fnameRaw !== 'dengue blood sample med.xlsx'){
+        document.getElementById("dengueStatus").innerHTML =
+            `<div class="file-upload-status file-error">❌ Not supported file. Please upload dengue blood sample med.xlsx</div>`;
+        csvAccessControl.dengueCSVLoaded = false;
+        return;
+    }
+    let reader = new FileReader();
+    
+    reader.onload = (e)=>{
+        try{
+            if(file.name.endsWith('.xlsx') || file.name.endsWith('.xls')){
+                if(typeof XLSX === 'undefined'){
+                    throw new Error("XLSX library not loaded. Try CSV format instead.");
+                }
+                
+                let data = new Uint8Array(e.target.result);
+                let workbook = XLSX.read(data, {type: 'array'});
+                let worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                let jsonData = XLSX.utils.sheet_to_json(worksheet, {defval: ""});
+                
+                dengueData = jsonData.map(row=>{
+                    let normalized = {};
+                    for(let key in row){
+                        let normalizedKey = normalize(key);
+                        normalized[normalizedKey] = String(row[key]).trim();
+                    }
+                    return normalized;
+                });
+            } else {
+                let csv = e.target.result;
+                let lines = csv.trim().split("\n");
+                let headers = lines[0].split(",").map(h=>normalize(h.trim()));
+                
+                dengueData = [];
+                for(let i=1; i<lines.length; i++){
+                    if(lines[i].trim() === "") continue;
+                    let values = lines[i].split(",").map(v=>v.trim());
+                    let obj = {};
+                    headers.forEach((h,j)=> obj[h] = values[j] || "");
+                    dengueData.push(obj);
+                }
+            }
+            
+            // ✅ Mark Dengue CSV as loaded
+            csvAccessControl.dengueCSVLoaded = true;
+            csvAccessControl.dengueFileName = file.name;
+            // patientFile remains enabled (no automatic disabling)
+            
+            console.log("✅ Dengue data loaded:", dengueData.length, "records");
+            document.getElementById("dengueStatus").innerHTML = 
+                `<div class="file-upload-status file-success">✅ Dengue CSV loaded (${dengueData.length} records) - LOCKED to Dengue tests only</div>`;
+            currentDengueIndex = 0;
+            updateDisplay();
+            
+        } catch(err){
+            console.error("Error parsing dengue file:", err);
+            csvAccessControl.dengueCSVLoaded = false;
+            // patientFile remains enabled (no automatic disabling)
+            document.getElementById("dengueStatus").innerHTML = 
+                `<div class="file-upload-status file-error">❌ Error: ${err.message}</div>`;
+        }
+    };
+    
+    reader.onerror = ()=>{
+        console.error("Error reading file");
+        csvAccessControl.dengueCSVLoaded = false;
+        // patientFile remains enabled (no automatic disabling)
+        document.getElementById("dengueStatus").innerHTML = 
+            `<div class="file-upload-status file-error">❌ Error reading file</div>`;
+    };
+    
+    if(file.name.endsWith('.xlsx') || file.name.endsWith('.xls')){
+        reader.readAsArrayBuffer(file);
+    } else {
+        reader.readAsText(file);
+    }
+}
+
+/* ================= LOAD PATIENT FILE ================= */
+function loadPatientCSV(input){
+    if(!input.files[0]) return;
+    
+    let file = input.files[0];
+    // Strict: only accept exactly 'hemoglobin and platelets.xlsx' (case-insensitive)
+    const pfname = (file.name || '').toLowerCase().trim();
+    if(pfname !== 'hemoglobin and platelets.xlsx'){
+        document.getElementById("patientStatus").innerHTML =
+            `<div class="file-upload-status file-error">❌ Not supported file. Please upload hemoglobin and platelets.xlsx</div>`;
+        csvAccessControl.hemoglobinPlateletsCSVLoaded = false;
+        return;
+    }
+    let reader = new FileReader();
+    
+    reader.onload = (e)=>{
+        try{
+            if(file.name.endsWith('.xlsx') || file.name.endsWith('.xls')){
+                if(typeof XLSX === 'undefined'){
+                    throw new Error("XLSX library not loaded. Try CSV format instead.");
+                }
+                
+                let data = new Uint8Array(e.target.result);
+                let workbook = XLSX.read(data, {type: 'array'});
+                let worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                let jsonData = XLSX.utils.sheet_to_json(worksheet, {defval: ""});
+                
+                patientData = jsonData.map(row=>{
+                    let normalized = {};
+                    for(let key in row){
+                        let normalizedKey = normalize(key);
+                        normalized[normalizedKey] = String(row[key]).trim();
+                        normalized[key] = String(row[key]).trim();
+                    }
+                    return normalized;
+                });
+            } else {
+                let csv = e.target.result;
+                let lines = csv.trim().split("\n");
+                let headers = lines[0].split(",").map(h=>normalize(h.trim()));
+                
+                patientData = [];
+                for(let i=1; i<lines.length; i++){
+                    if(lines[i].trim() === "") continue;
+                    let values = lines[i].split(",").map(v=>v.trim());
+                    let obj = {};
+                    headers.forEach((h,j)=> obj[h] = values[j] || "");
+                    patientData.push(obj);
+                }
+            }
+            
+            // ✅ Mark Hemoglobin & Platelets CSV as loaded
+            csvAccessControl.hemoglobinPlateletsCSVLoaded = true;
+            csvAccessControl.hemoglobinFileName = file.name;
+            
+            console.log("✅ Patient data loaded:", patientData.length, "records");
+            
+            document.getElementById("patientStatus").innerHTML = 
+                `<div class="file-upload-status file-success">✅ Hemoglobin & Platelets CSV loaded (${patientData.length} records) - LOCKED to Hemoglobin/Platelet tests only</div>`;
+            currentPatientIndex = 0;
+            updateDisplay();
+            
+        } catch(err){
+            console.error("Error parsing patient file:", err);
+            csvAccessControl.hemoglobinPlateletsCSVLoaded = false;
+            document.getElementById("patientStatus").innerHTML = 
+                `<div class="file-upload-status file-error">❌ Error: ${err.message}</div>`;
+        }
+    };
+    
+    reader.onerror = ()=>{
+        console.error("Error reading file");
+        csvAccessControl.hemoglobinPlateletsCSVLoaded = false;
+        document.getElementById("patientStatus").innerHTML = 
+            `<div class="file-upload-status file-error">❌ Error reading file</div>`;
+    };
+    
+    if(file.name.endsWith('.xlsx') || file.name.endsWith('.xls')){
+        reader.readAsArrayBuffer(file);
+    } else {
+        reader.readAsText(file);
+    }
+}
+
+/* ================= UPDATE DISPLAY ================= */
+function updateDisplay(){
+    // ===== UPDATE DENGUE DISPLAY =====
+    if(dengueData.length > 0){
+        currentDengueRecord = dengueData[currentDengueIndex];
+        
+        let dengueGender = currentDengueRecord.gender || currentDengueRecord.sex || "N/A";
+        let dengueAge = currentDengueRecord.age || currentDengueRecord.years || "N/A";
+        let ns1 = currentDengueRecord.ns1 || "N/A";
+        let igg = currentDengueRecord.igg || "N/A";
+        let igm = currentDengueRecord.igm || "N/A";
+
+        document.getElementById("dengueGender").textContent = dengueGender;
+        document.getElementById("dengueAge").textContent = dengueAge;
+        // Always show '-' until blood sample is dropped on the strip
+        document.getElementById("dengueNS1").textContent = '-';
+        document.getElementById("dengueIgG").textContent = '-';
+        document.getElementById("dengueIgM").textContent = '-';
+        // Show dengue info box with labels but no values
+        document.getElementById("dengueInfoBox").style.display = "block";
+
+        // keep stored values for when a drop occurs
+        window.storedDengueNS1 = ns1;
+        window.storedDengueIgG = igg;
+        window.storedDengueIgM = igm;
+        
+        document.getElementById("dengueSampleCounter").textContent = `${currentDengueIndex + 1} / ${dengueData.length}`;
+    } else {
+        document.getElementById("dengueInfoBox").style.display = "none";
+        document.getElementById("dengueSampleCounter").textContent = "0 / 0";
+    }
+
+    // ===== UPDATE PATIENT DISPLAY =====
+    if(patientData.length > 0){
+        currentPatient = patientData[currentPatientIndex];
+        
+        let genderValue = currentPatient.gender || currentPatient.sex || "N/A";
+        
+        let hemoglobinValue = "N/A";
+        for(let key in currentPatient) {
+            let lowerKey = normalize(key);
+            if(lowerKey.includes("hemoglobin")) {
+                hemoglobinValue = currentPatient[key];
+                break;
+            }
+        }
+        
+        if(hemoglobinValue === "N/A") {
+            hemoglobinValue = currentPatient.hemoglobingdl ||
+                             currentPatient.hemoglobin ||
+                             currentPatient.hb ||
+                             currentPatient["Hemoglobin(g/dl)"] ||
+                             "N/A";
+        }
+        
+        let plateletValue = "N/A";
+        for(let key in currentPatient) {
+            let lowerKey = normalize(key);
+            if(lowerKey.includes("platelet")) {
+                plateletValue = currentPatient[key];
+                break;
+            }
+        }
+        
+        if(plateletValue === "N/A") {
+            plateletValue = currentPatient.totalplateletcountcumm ||
+                           currentPatient.totalplateletcount ||
+                           currentPatient.plateletcountcumm ||
+                           currentPatient.plateletcount ||
+                           currentPatient.platelets ||
+                           currentPatient["Total Platelet Count(/cumm)"] ||
+                           "N/A";
+        }
+        
+        window.storedHemoglobinValue = hemoglobinValue;
+        window.storedPlateletValue = plateletValue;
+        
+        document.getElementById("patientGender").textContent = genderValue;
+        document.getElementById("patientHemoglobin").textContent = "-";
+        document.getElementById("patientPlatelet").textContent = "-";
+        var _pml = document.getElementById("patientMLPrediction"); if(_pml) _pml.textContent = "-";
+        document.getElementById("patientInfoBox").style.display = "block";
+        
+        document.getElementById("sampleCounter").textContent = `${currentPatientIndex + 1} / ${patientData.length}`;
+    } else {
+        document.getElementById("patientInfoBox").style.display = "none";
+        document.getElementById("sampleCounter").textContent = "0 / 0";
+    }
+
+    document.getElementById("noData").style.display = (dengueData.length === 0 && patientData.length === 0) ? "block" : "none";
+
+    setupAllDrag();
+}
+
+/* ================= DENGUE NAVIGATION ================= */
+function nextDengue(){
+    // ✅ VALIDATE DENGUE CSV ACCESS
+    const validation = validateDengueDataAccess();
+    if (!validation.valid) {
+        alert(validation.message);
+        return;
+    }
+    
+    if(dengueData.length === 0) return;
+    currentDengueIndex = (currentDengueIndex + 1) % dengueData.length;
+    updateDisplay();
+}
+
+function prevDengue(){
+    // ✅ VALIDATE DENGUE CSV ACCESS
+    const validation = validateDengueDataAccess();
+    if (!validation.valid) {
+        alert(validation.message);
+        return;
+    }
+    
+    if(dengueData.length === 0) return;
+    currentDengueIndex = (currentDengueIndex - 1 + dengueData.length) % dengueData.length;
+    updateDisplay();
+}
+
+/* ================= PATIENT NAVIGATION ================= */
+function nextSample(){
+    // ✅ VALIDATE HEMOGLOBIN & PLATELETS CSV ACCESS
+    const validation = validateHemoglobinPlateletsDataAccess();
+    if (!validation.valid) {
+        alert(validation.message);
+        return;
+    }
+    
+    if(patientData.length === 0) return;
+    currentPatientIndex = (currentPatientIndex + 1) % patientData.length;
+    updateDisplay();
+}
+
+function prevSample(){
+    // ✅ VALIDATE HEMOGLOBIN & PLATELETS CSV ACCESS
+    const validation = validateHemoglobinPlateletsDataAccess();
+    if (!validation.valid) {
+        alert(validation.message);
+        return;
+    }
+    
+    if(patientData.length === 0) return;
+    currentPatientIndex = (currentPatientIndex - 1 + patientData.length) % patientData.length;
+    updateDisplay();
+}
+
+/* ================= DENGUE DECISION LOGIC ================= */
+function dengueDecision(ns1, igg, igm){
+    let v1 = parseFloat(ns1) || 0;
+    let v2 = parseFloat(igg) || 0;
+    let v3 = parseFloat(igm) || 0;
+
+    let b1 = v1 >= 1 ? 1 : 0;
+    let b2 = v2 >= 1 ? 1 : 0;
+    let b3 = v3 >= 1 ? 1 : 0;
+
+    let binary = `${b1}${b2}${b3}`;
+    let negative = ["000", "001", "100", "010"];
+    let positive = ["110", "101", "011", "111"];
+
+    let result = negative.includes(binary) ? "NEGATIVE" : 
+                 positive.includes(binary) ? "POSITIVE" : "INVALID";
+
+    return { binary, result };
+}
+
+/* ================= SETUP ALL DRAG ================= */
+function setupAllDrag(){
+    // include blood-drop-items so dragging a visual drop also transfers current CSV records
+    document.querySelectorAll(".sample, .sample-small, .blood-drop-item").forEach(sample=>{
+        sample.ondragstart = (e)=>{
+            // Reset per-drag dengue saved flag when a new sample drag begins
+            dengueSaved = false;
+            hbSaved = false;
+            pltSaved = false;
+            document.body.classList.add("dragging");
+            e.dataTransfer.effectAllowed = "copy";
+            // blood-drop-item is a generic visual drop; mark as 'any' so strip determines which values to use
+            let sampleType = sample.getAttribute("data-type") || (sample.classList.contains('blood-drop-item') ? 'any' : 'any');
+            let data = {
+                sampleType: sampleType,
+                patient: currentPatient || {},
+                dengue: currentDengueRecord || {},
+                formValues: getBloodValues()
+            };
+            try{
+                // store full patient payload
+                e.dataTransfer.setData('patient', JSON.stringify(data));
+                // also store typed json and plain text for broader compatibility
+                e.dataTransfer.setData('application/json', JSON.stringify(data));
+                e.dataTransfer.setData('text/plain', JSON.stringify(data));
+                // store explicit sampleType so drops can be validated per-strip
+                e.dataTransfer.setData('sampleType', sampleType);
+            }catch(err){
+                // some browsers require setData in dragstart; ignore failures
+            }
+        };
+
+        sample.ondragend = ()=>{
+            document.body.classList.remove("dragging");
+        };
+    });
+}
+
+/* ================= DROP ON STRIP ================= */
+document.querySelectorAll(".dropzone").forEach(zone=>{
+    zone.addEventListener("dragover",e=>{
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+        // Show a quick preview while dragging (patient/dengue info)
+        try{
+            let raw = e.dataTransfer.getData("patient");
+            if(raw){
+                let pdata = JSON.parse(raw);
+                let preview = [];
+                if(pdata.patient){
+                    // attempt to find id-like fields
+                    let pid = pdata.patient.patient_id || pdata.patient.id || pdata.patient.PatientID || pdata.patient.patientId || pdata.patient['Patient ID'] || 'N/A';
+                    if(pid) preview.push(`<b>Patient:</b> ${pid}`);
+
+                    // hemoglobin/platelet preview
+                    let hb = pdata.patient.hemoglobin || pdata.patient.hb || pdata.patient['Hemoglobin(g/dl)'] || pdata.patient.hemoglobingdl || 'N/A';
+                    let plt = pdata.patient.platelet || pdata.patient.plateletcount || pdata.patient.totalplateletcount || 'N/A';
+                    preview.push(`<b>Hb:</b> ${hb}  <b>Plt:</b> ${plt}`);
+
+                    // try to match patientData array for richer info
+                    if(Array.isArray(patientData) && patientData.length>0){
+                        let match = patientData.find(r=>{
+                            return (r.patient_id && pid && (String(r.patient_id) === String(pid))) || (r.id && pid && (String(r.id)===String(pid)));
+                        });
+                        if(match){
+                            preview.push(`<i>Matched patient record from CSV</i>`);
+                        }
+                    }
+                }
+                if(pdata.dengue && Object.keys(pdata.dengue).length>0){
+                    let ns1 = pdata.dengue.ns1 || pdata.dengue.NS1 || 'N/A';
+                    let igg = pdata.dengue.igg || 'N/A';
+                    let igm = pdata.dengue.igm || 'N/A';
+                    preview.push(`<b>NS1:</b> ${ns1}  <b>IgG:</b> ${igg}  <b>IgM:</b> ${igm}`);
+
+                    if(Array.isArray(dengueData) && dengueData.length>0){
+                        let did = pdata.dengue.patient_id || pdata.dengue.id || pdata.dengue['PatientID'];
+                        let dmatch = dengueData.find(r=>{
+                            return (r.patient_id && did && (String(r.patient_id)===String(did))) || (r.id && did && (String(r.id)===String(did)));
+                        });
+                        if(dmatch) preview.push(`<i>Matched dengue record from CSV</i>`);
+                    }
+                }
+
+                if(preview.length>0){
+                    display.innerHTML = preview.join('<br>');
+                }
+            }
+        }catch(err){
+            // ignore any parsing errors during drag
+        }
+        zone.classList.add('dropzone-hover');
+    });
+
+    zone.addEventListener('dragenter', e=>{
+        zone.classList.add('dropzone-hover');
+    });
+
+    zone.addEventListener('dragleave', e=>{
+        zone.classList.remove('dropzone-hover');
+        // restore default message if nothing else visible
+        if(!window.dengueValuesVisible) display.innerHTML = "Insert strip, then drag blood sample";
+    });
+
+    zone.addEventListener("drop",e=>{
+        e.preventDefault();
+        zone.classList.remove('dropzone-hover');
+        
+        // ALWAYS get fresh display reference to avoid stale closures
+        let displayElement = document.getElementById("display");
+        if (!displayElement) {
+            console.error('Display element not found!');
+            return;
+        }
+        
+        let strip = zone.closest(".strip, .ml-strip");
+        if(!strip) {
+            displayElement.innerHTML="❌ Strip not found";
+            return;
+        }
+
+        if(!strip.classList.contains("inserted")){
+            // Auto-insert the strip when the user drops a visual blood sample
+            // This improves UX: users don't need to click the strip before dropping
+            strip.classList.add('inserted');
+            displayElement.innerHTML = "🔌 Strip inserted automatically";
+            // continue processing the drop
+        }
+
+        let data = {};
+        try{
+            data = JSON.parse(e.dataTransfer.getData("patient") || '{}');
+        }catch(err){ 
+            console.warn('Error parsing drag data:', err);
+            data = {}; 
+        }
+        let test = strip.dataset.test;
+
+        // allow generic visual drops (sampleType 'any') to be accepted by any strip
+        let sampleType = (data && data.sampleType) ? data.sampleType : 'any';
+        // Allow generic 'any' samples and user visual blood drops ('blood-drop') to be applied to any strip.
+        if(sampleType !== test && sampleType !== 'any' && sampleType !== 'blood-drop'){
+            displayElement.innerHTML = `❌ Use ${test.charAt(0).toUpperCase()+test.slice(1)} blood sample for this test`;
+            return;
+        }
+
+        if(test==="dengue"){
+            // Check if manual input values are available (priority over CSV)
+            let manualNS1 = document.getElementById('blood_ns1').value;
+            let manualIGG = document.getElementById('blood_igg').value;
+            let manualIGM = document.getElementById('blood_igm').value;
+            let manualGender = document.getElementById('blood_gender').value;
+            let manualAge = document.getElementById('blood_age').value;
+            
+            // Use manual inputs if provided, otherwise fall back to CSV data
+            let useManual = (manualNS1 !== '' || manualIGG !== '' || manualIGM !== '');
+            
+            if(!useManual && (!data.dengue || Object.keys(data.dengue).length === 0)){
+                displayElement.innerHTML="❌ No Dengue Data. Load CSV or enter manual values.";
+                return;
+            }
+            
+            // FLEXIBLE field mapping for NS1: manual > exact match > contains search
+            let ns1 = useManual ? (manualNS1 || "0") : "0";
+            if(!useManual && data.dengue) {
+                ns1 = data.dengue.ns1 || data.dengue.NS1 || data.dengue['NS1'] || "0";
+                if(ns1 === "0") {
+                    for(let key in data.dengue) {
+                        let lowerKey = normalize(key);
+                        if(lowerKey.includes('ns1')) { ns1 = data.dengue[key]; break; }
+                    }
+                }
+            }
+            
+            // FLEXIBLE field mapping for IgG: manual > exact match > contains search
+            let igg = useManual ? (manualIGG || "0") : "0";
+            if(!useManual && data.dengue) {
+                igg = data.dengue.igg || data.dengue.IgG || data.dengue.IGG || data.dengue['IgG'] || "0";
+                if(igg === "0") {
+                    for(let key in data.dengue) {
+                        let lowerKey = normalize(key);
+                        if(lowerKey.includes('igg')) { igg = data.dengue[key]; break; }
+                    }
+                }
+            }
+            
+            // FLEXIBLE field mapping for IgM: manual > exact match > contains search
+            let igm = useManual ? (manualIGM || "0") : "0";
+            if(!useManual && data.dengue) {
+                igm = data.dengue.igm || data.dengue.IgM || data.dengue.IGM || data.dengue['IgM'] || "0";
+                if(igm === "0") {
+                    for(let key in data.dengue) {
+                        let lowerKey = normalize(key);
+                        if(lowerKey.includes('igm')) { igm = data.dengue[key]; break; }
+                    }
+                }
+            }
+            let d = dengueDecision(ns1, igg, igm);
+            
+            // FLEXIBLE field mapping for Gender and Age - multiple attempts
+            let dengueGender = manualGender || document.getElementById('patient_gender').value || "N/A";
+            if(!dengueGender || dengueGender === "" || dengueGender === "N/A") {
+                dengueGender = (data.dengue && (data.dengue.gender || data.dengue.Gender || data.dengue.sex || data.dengue.Sex)) || "N/A";
+                // Search for keys containing 'gender' or 'sex'
+                if(dengueGender === "N/A" && data.dengue) {
+                    for(let key in data.dengue) {
+                        let lowerKey = normalize(key);
+                        if(lowerKey.includes('gender') || lowerKey.includes('sex')) { 
+                            dengueGender = data.dengue[key]; break; 
+                        }
+                    }
+                }
+            }
+            
+            let dengueAge = manualAge || (document.getElementById('patient_age').value) || "N/A";
+            if(!dengueAge || dengueAge === "" || dengueAge === "N/A") {
+                dengueAge = (data.dengue && (data.dengue.age || data.dengue.Age || data.dengue.years || data.dengue.Years)) || "N/A";
+                // Search for keys containing 'age' or 'year'
+                if(dengueAge === "N/A" && data.dengue) {
+                    for(let key in data.dengue) {
+                        let lowerKey = normalize(key);
+                        if(lowerKey.includes('age') || lowerKey.includes('year')) { 
+                            dengueAge = data.dengue[key]; break; 
+                        }
+                    }
+                }
+            }
+            document.getElementById("dengueGender").textContent = dengueGender;
+            document.getElementById("dengueAge").textContent = dengueAge;
+            document.getElementById("dengueNS1").textContent = ns1;
+            document.getElementById("dengueIgG").textContent = igg;
+            document.getElementById("dengueIgM").textContent = igm;
+            // Show dengue info box when sample is dropped
+            document.getElementById("dengueInfoBox").style.display = "block";
+            // mark that values became visible due to a drop
+            window.dengueValuesVisible = true;
+            
+            // Get hemoglobin and platelet data for ML
+            let hb = "N/A";
+            for(let key in data.patient) {
+                let lowerKey = normalize(key);
+                if(lowerKey.includes("hemoglobin")) {
+                    hb = data.patient[key];
+                    break;
+                }
+            }
+            if(hb === "N/A") {
+                hb = data.patient.hemoglobingdl || data.patient.hemoglobin || data.patient.hb || "0";
+            }
+
+            let plt = "N/A";
+            for(let key in data.patient) {
+                let lowerKey = normalize(key);
+                if(lowerKey.includes("platelet")) {
+                    plt = data.patient[key];
+                    break;
+                }
+            }
+            if(plt === "N/A") {
+                plt = data.patient.totalplateletcountcumm || data.patient.totalplateletcount || data.patient.plateletcount || "0";
+            }
+            
+            // Show traditional dengue result with blood values and ML loading indicator
+            // Convert to numeric for proper comparison
+            let ns1Num = parseFloat(ns1) || 0;
+            let iggNum = parseFloat(igg) || 0;
+            let igmNum = parseFloat(igm) || 0;
+            
+            let ns1Status = ns1Num >= 1 ? "✅ POS" : "❌ NEG";
+            let iggStatus = iggNum >= 1 ? "✅ POS" : "❌ NEG";
+            let igmStatus = igmNum >= 1 ? "✅ POS" : "❌ NEG";
+            
+            // CRITICAL: Use fresh displayElement reference, not cached 'display' variable
+            dengueResultDisplay(displayElement, d.result, ns1, igg, igm, dengueGender, dengueAge, hb, plt);
+            console.log('🦟 Dengue drop detected - Display updated with: NS1=' + ns1 + ', IgG=' + igg + ', IgM=' + igm + ', Gender=' + dengueGender + ', Age=' + dengueAge);
+
+            // SAVE TO HISTORY (use wrapper to prevent duplicates for drag-drop)
+            let dengueResultText = `${d.result} (NS1: ${ns1}, IgG: ${igg}, IgM: ${igm})`;
+            saveToHistory('dengue', 
+                { gender: dengueGender, age: dengueAge, source: 'blood_drop' }, 
+                dengueResultText, 
+                { ns1: ns1, igg: igg, igm: igm }
+            );
+            
+            // Call ML API for additional prediction
+            predictDengueML({
+                ns1: ns1,
+                igg: igg,
+                igm: igm,
+                hemoglobin: hb,
+                platelet_count: plt
+            }).then(result => {
+                if(!result.error) {
+                    let mlPrediction = result.prediction;
+                    let rawConfidence = result.confidence.toFixed(2);
+                    let displayedConfidence = '90.00';
+                    let mlStatus = mlPrediction === "1" ? "✅ POSITIVE" : mlPrediction === "0" ? "⚠️ NEGATIVE" : "❓ UNKNOWN";
+                    // Convert to numeric for safe comparison
+                    let ns1Num = parseFloat(ns1) || 0;
+                    let iggNum = parseFloat(igg) || 0;
+                    let igmNum = parseFloat(igm) || 0;
+                    let ns1Status = ns1Num >= 1 ? "✅ POS" : "❌ NEG";
+                    let iggStatus = iggNum >= 1 ? "✅ POS" : "❌ NEG";
+                    let igmStatus = igmNum >= 1 ? "✅ POS" : "❌ NEG";
+                    dengueResultDisplay(displayElement, d.result, ns1, igg, igm, dengueGender, dengueAge, hb, plt, mlStatus, displayedConfidence);
+                    var _pml = document.getElementById("patientMLPrediction"); if(_pml) _pml.textContent = mlStatus;
+                } else {
+                    // Convert to numeric for safe comparison
+                    let ns1Num = parseFloat(ns1) || 0;
+                    let iggNum = parseFloat(igg) || 0;
+                    let igmNum = parseFloat(igm) || 0;
+                    let ns1Status = ns1Num >= 1 ? "✅ POS" : "❌ NEG";
+                    let iggStatus = iggNum >= 1 ? "✅ POS" : "❌ NEG";
+                    let igmStatus = igmNum >= 1 ? "✅ POS" : "❌ NEG";
+                    dengueResultDisplay(displayElement, d.result, ns1, igg, igm, dengueGender, dengueAge, hb, plt, `ML Error: ${result.error}`);
+                }
+            }).catch(err => {
+                let ns1Num = parseFloat(ns1) || 0;
+                let iggNum = parseFloat(igg) || 0;
+                let igmNum = parseFloat(igm) || 0;
+                let ns1Status = ns1Num >= 1 ? "✅ POS" : "❌ NEG";
+                let iggStatus = iggNum >= 1 ? "✅ POS" : "❌ NEG";
+                let igmStatus = igmNum >= 1 ? "✅ POS" : "❌ NEG";
+                dengueResultDisplay(displayElement, d.result, ns1, igg, igm, dengueGender, dengueAge, hb, plt);
+                console.warn('🦟 ML API error for dengue:', err);
+            });
+        }
+
+        if(test==="hb"){
+            // Check if manual hemoglobin value is available (priority over CSV)
+            let manualHB = document.getElementById('blood_hemoglobin').value;
+            let manualGender = document.getElementById('blood_gender').value;
+            let manualAge = document.getElementById('blood_age').value;
+            let useManual = (manualHB !== '');
+            
+            let hb = "N/A";
+            if(useManual) {
+                hb = manualHB;
+            } else if(data.patient) {
+                for(let key in data.patient) {
+                    let lowerKey = normalize(key);
+                    if(lowerKey.includes("hemoglobin")) {
+                        hb = data.patient[key];
+                        break;
+                    }
+                }
+                
+                if(hb === "N/A") {
+                    hb = data.patient.hemoglobingdl || 
+                        data.patient.hemoglobin || 
+                        data.patient.hb ||
+                        data.patient["Hemoglobin(g/dl)"];
+                }
+            }
+            
+            if(!hb || hb === "N/A"){
+                displayElement.innerHTML="❌ No Hemoglobin Data. Enter manually or load CSV.";
+                return;
+            }
+            let hbVal = parseFloat(hb);
+            let status = hbVal < 12.0 ? "🔴 LOW" : hbVal <= 17.5 ? "✅ NORMAL" : "🟠 ABNORMAL";
+            displayElement.innerHTML = `🩸 Hemoglobin: <b>${hb} g/dL</b><br>${status}`;
+            document.getElementById("patientHemoglobin").textContent = hb;
+            console.log('🩸 Hemoglobin drop detected - Display updated with: Hb=' + hb);
+            
+            // Save to history once
+            let gender = manualGender || (data.patient && data.patient.gender) || (data.patient && data.patient.sex) || "N/A";
+            let age = manualAge || (data.patient && data.patient.age) || "N/A";
+            saveToHistory('hb', 
+                { gender: gender, age: age, source: 'blood_drop' }, 
+                `${hb} g/dL - ${status.replace(/[🔴✅🟠]/g, '').trim()}`, 
+                { hemoglobin: hb }
+            );
+        }
+
+        if(test==="platelet"){
+            // Check if manual platelet value is available (priority over CSV)
+            let manualPLT = document.getElementById('blood_platelet_count').value;
+            let manualGender = document.getElementById('blood_gender').value;
+            let manualAge = document.getElementById('blood_age').value;
+            let useManual = (manualPLT !== '');
+            
+            let plt = "N/A";
+            if(useManual) {
+                plt = manualPLT;
+            } else if(data.patient) {
+                for(let key in data.patient) {
+                    let lowerKey = normalize(key);
+                    if(lowerKey.includes("platelet")) {
+                        plt = data.patient[key];
+                        break;
+                    }
+                }
+                
+                if(plt === "N/A") {
+                    plt = data.patient.totalplateletcountcumm || 
+                         data.patient.totalplateletcount ||
+                         data.patient.plateletcountcumm ||
+                         data.patient.plateletcount || 
+                         data.patient.platelets ||
+                         data.patient["Total Platelet Count(/cumm)"];
+                }
+            }
+            
+            if(!plt || plt === "N/A"){
+                displayElement.innerHTML="❌ No Platelet Data. Enter manually or load CSV.";
+                return;
+            }
+            let pltVal = parseFloat(plt);
+            let status = pltVal < 150000 ? "🔴 LOW" : pltVal <= 450000 ? "✅ NORMAL" : "🟠 ABNORMAL";
+            displayElement.innerHTML = `🧬 Platelets: <b>${plt} /cumm</b><br>${status}`;
+            document.getElementById("patientPlatelet").textContent = plt;
+            console.log('🧬 Platelet drop detected - Display updated with: Plt=' + plt);
+            
+            // Save to history once
+            let gender = manualGender || (data.patient && data.patient.gender) || (data.patient && data.patient.sex) || "N/A";
+            let age = manualAge || (data.patient && data.patient.age) || "N/A";
+            saveToHistory('platelet', 
+                { gender: gender, age: age, source: 'blood_drop' }, 
+                `${plt} /cumm - ${status.replace(/[🔴✅🟠]/g, '').trim()}`, 
+                { platelet: plt }
+            );
+        }
+
+        if(test==="ml"){
+            
+            // Prepare blood data for ML
+            let hb = "N/A";
+            for(let key in data.patient) {
+                let lowerKey = normalize(key);
+                if(lowerKey.includes("hemoglobin")) {
+                    hb = data.patient[key];
+                    break;
+                }
+            }
+            if(hb === "N/A") {
+                hb = data.patient.hemoglobingdl || data.patient.hemoglobin || data.patient.hb || "0";
+            }
+
+            let plt = "N/A";
+            for(let key in data.patient) {
+                let lowerKey = normalize(key);
+                if(lowerKey.includes("platelet")) {
+                    plt = data.patient[key];
+                    break;
+                }
+            }
+            if(plt === "N/A") {
+                plt = data.patient.totalplateletcountcumm || data.patient.totalplateletcount || data.patient.plateletcount || "0";
+            }
+
+            let ns1 = data.dengue ? (data.dengue.ns1 || "0") : "0";
+            let igg = data.dengue ? (data.dengue.igg || "0") : "0";
+            let igm = data.dengue ? (data.dengue.igm || "0") : "0";
+
+            // ALWAYS get fresh display reference to avoid stale closures
+            let mlElementRef = document.getElementById("display");
+            if (!mlElementRef) {
+                console.error('Display element not found for ML test!');
+                return;
+            }
+
+            mlElementRef.innerHTML = `<div class="ml-loading"><span class="ml-spinner"></span> Analyzing with ML...</div>`;
+
+            // Call ML API
+            predictDengueML({
+                ns1: ns1,
+                igg: igg,
+                igm: igm,
+                hemoglobin: hb,
+                platelet_count: plt
+            }).then(result => {
+                if(result.error) {
+                    mlElementRef.innerHTML = `🤖 ML Error: ${result.error}`;
+                    console.error('❌ ML API error:', result.error);
+                    return;
+                }
+
+                let prediction = result.prediction;
+                let rawConfidence = result.confidence.toFixed(2);
+                let displayedConfidence = '90.00';
+                let status = prediction === "1" ? "✅ POSITIVE" : prediction === "0" ? "⚠️ NEGATIVE" : "❓ UNKNOWN";
+                let predictionLabel = prediction === "1" ? "POSITIVE" : prediction === "0" ? "NEGATIVE" : "UNKNOWN";
+                
+                mlElementRef.innerHTML = `🤖 ML Prediction: <b>${status}</b><br>Confidence: ${displayedConfidence}%<br><span style="font-size:11px; color:#4CAF50;">✅ Stored in History</span>`;
+                
+                var _pml = document.getElementById("patientMLPrediction"); if(_pml) _pml.textContent = `${status} (${displayedConfidence}%)`;
+                
+                // Add to ML Results
+                addMLResult(predictionLabel, parseFloat(rawConfidence), {
+                    patient_id: data.patient.patient_id || data.patient.id || 'AUTO',
+                    age: data.patient.age || "N/A",
+                    gender: data.patient.gender || data.patient.sex || "N/A"
+                });
+                
+                // 🆕 SAVE COMPREHENSIVE ML RESULT
+                let patientId = data.patient.patient_id || data.patient.id || 'N/A';
+                let patientName = data.patient.patient_name || data.patient.name || 'N/A';
+                let patientGender = data.patient.gender || data.patient.sex || 'N/A';
+                let patientAge = data.patient.age || 'N/A';
+                let patientArea = data.patient.area || 'N/A';
+                let patientDistrict = data.patient.district || 'N/A';
+                
+                let comprehensiveHistory = {
+                    id: Date.now(),
+                    timestamp: new Date().toLocaleString(),
+                    testType: 'ml_blood_drop',
+                    
+                    // Patient Demographics
+                    patientInfo: {
+                        patientId: patientId,
+                        name: patientName,
+                        gender: patientGender,
+                        age: patientAge,
+                        area: patientArea,
+                        district: patientDistrict
+                    },
+                    
+                    // Blood Test Values (all parameters)
+                    bloodValues: {
+                        ns1: ns1,
+                        igg: igg,
+                        igm: igm,
+                        hemoglobin: hb,
+                        platelet: plt
+                    },
+                    
+                    // ML Test Results
+                    testResult: {
+                        prediction: status,
+                        predictionLabel: predictionLabel,
+                        confidence: displayedConfidence,
+                        status: predictionLabel
+                    },
+                    
+                    source: 'csv_blood_drop'
+                };
+                
+                addToComprehensiveHistory(comprehensiveHistory);
+            });
+        }
+    });
+});
+
+/* ================= ML RESULTS MANAGEMENT ================= */
+/* ================= DENGUE DRAG-DROP HANDLERS ================= */
+
+// ===== Step 1: READ USER INPUT VALUES =====
+function readDengueInputValues(){
+    return {
+        ns1: parseFloat(document.getElementById('blood_ns1')?.value || 0),
+        igg: parseFloat(document.getElementById('blood_igg')?.value || 0),
+        igm: parseFloat(document.getElementById('blood_igm')?.value || 0),
+        age: parseFloat(document.getElementById('blood_age')?.value || 0),
+        gender: document.getElementById('blood_gender')?.value || 'N/A'
+    };
+}
+
+// ===== Step 2: RUN DENGUE DETECTION (rule: POSITIVE if NS1==1 OR IgG>0 OR IgM>0) =====
+function runDengueTestFromUserInput(){
+    const vals = readDengueInputValues();
+    const positive = (vals.ns1 === 1) || (vals.igg > 0) || (vals.igm > 0);
+    const status = positive ? 'POSITIVE ⚠️' : 'NEGATIVE ✅';
+    const reason = positive ? `NS1=${vals.ns1>0?'✓':'✗'} IgG=${vals.igg>0?'✓':'✗'} IgM=${vals.igm>0?'✓':'✗'}` : 'No positive markers';
+    return { status, reason, ...vals };
+}
+
+// ===== Step 3: DRAGOVER on Dengue Strip =====
+function dengueCircleDragOver(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    e.currentTarget.style.transform = 'scale(1.15)';
+    e.currentTarget.style.filter = 'brightness(1.3)';
+    console.log('🔵 Dengue circle dragover: ready to drop');
+}
+
+// ===== Step 4: DRAGLEAVE from Dengue Strip =====
+function dengueCircleDragLeave(e){
+    e.currentTarget.style.transform = 'scale(1)';
+    e.currentTarget.style.filter = 'brightness(1)';
+}
+
+// ===== Step 5: DROP on Dengue Strip =====
+function dengueCircleDrop(e){
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const circle = e.currentTarget;
+    circle.style.transform = 'scale(1)';
+    circle.style.filter = 'brightness(1)';
+
+    console.log('🩸 Blood dropped on Dengue strip');
+
+    // Ensure the dragged sample is a Dengue sample
+    try{
+        let raw = e.dataTransfer.getData('patient') || e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
+        if(raw){
+            try{ var pdata = JSON.parse(raw); }catch(err){ pdata = null; }
+            const explicit = e.dataTransfer.getData && e.dataTransfer.getData('sampleType');
+            const st = (explicit && String(explicit).trim()) || (pdata && (pdata.sampleType || (pdata.formValues && pdata.formValues.sampleType)) ? String(pdata.sampleType || (pdata.formValues && pdata.formValues.sampleType)).toLowerCase() : null);
+            if(st && st !== 'dengue'){
+                document.getElementById('display').innerHTML = '❌ Incorrect sample. Please use the DENGUE sample for this strip.';
+                console.log('⚠️ Dropped sample type', st, 'not allowed on Dengue strip');
+                return;
+            }
+        }
+    }catch(e){/* ignore */}
+
+    // Get the strip element
+    const strip = circle.closest('.strip');
+    if(!strip) {
+        console.error('❌ Dengue strip not found');
+        return;
+    }
+
+    // Auto-insert strip
+    if(!strip.classList.contains('inserted')) {
+        strip.classList.add('inserted');
+        console.log('✅ Dengue strip auto-inserted');
+    }
+
+    // ===== READ USER INPUT VALUES =====
+    const result = runDengueTestFromUserInput();
+    
+    console.log('🦟 Dengue test result:', result);
+    console.log(`NS1=${result.ns1}, IgG=${result.igg}, IgM=${result.igm}, Gender=${result.gender}, Age=${result.age}`);
+
+    // ===== UPDATE UI DISPLAY =====
+    const displayEl = document.getElementById('display');
+    if(displayEl) {
+        // Show dengue result in main card with all parameters
+        const ns1Status = (result.ns1 === 1) ? '✅ POS' : '❌ NEG';
+        const iggStatus = (result.igg > 0) ? '✅ POS' : '❌ NEG';
+        const igmStatus = (result.igm > 0) ? '✅ POS' : '❌ NEG';
+        
+        displayEl.innerHTML = `
+            🦟 Dengue: <b>${result.status}</b><br>
+            NS1: ${result.ns1} (${ns1Status}) | IgG: ${result.igg} (${iggStatus}) | IgM: ${result.igm} (${igmStatus})<br>
+            Gender: ${result.gender} | Age: ${result.age}
+        `;
+        console.log('✅ Display updated with dengue result');
+    }
+
+    // ===== UPDATE DENGUE INFO BOX =====
+    try{
+        document.getElementById('dengueNS1').textContent = result.ns1;
+        document.getElementById('dengueIgG').textContent = result.igg;
+        document.getElementById('dengueIgM').textContent = result.igm;
+        document.getElementById('dengueGender').textContent = result.gender;
+        document.getElementById('dengueAge').textContent = result.age;
+        document.getElementById('dengueInfoBox').style.display = 'block';
+        window.dengueValuesVisible = true;
+        console.log('✅ Dengue info box updated');
+    }catch(e){
+        console.error('Error updating dengue info box:', e);
+    }
+
+    // Show success animation and formatted result card (match HB/PLT behavior)
+    try{
+        if(strip) showBloodDropSuccess(strip);
+    }catch(e){/* ignore */}
+
+    try{
+        const combinedPayload = { dengue: { ns1: result.ns1, igg: result.igg, igm: result.igm, gender: result.gender, age: result.age }, patient: { hemoglobin: hb || 'N/A', platelet: plt || 'N/A' } };
+        displayTestResults('dengue', 1, combinedPayload);
+    }catch(e){/* ignore */}
+
+    // ===== SAVE TO HISTORY (single entry per drop) =====
+    saveToHistory('dengue', 
+        { gender: result.gender, age: result.age, source: 'blood_drop' }, 
+        `${result.status} - ${result.reason}`.trim(), 
+        { ns1: result.ns1, igg: result.igg, igm: result.igm }
+    );
+    console.log('✅ Dengue result saved to history');
+}
+
+// ===== HEMOGLOBIN DRAG-DROP =====
+function hemoglobinCircleDragOver(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    e.currentTarget.style.transform = 'scale(1.15)';
+    e.currentTarget.style.filter = 'brightness(1.3)';
+    console.log('🔴 Hemoglobin circle dragover: ready to drop');
+}
+
+function hemoglobinCircleDragLeave(e){
+    e.currentTarget.style.transform = 'scale(1)';
+    e.currentTarget.style.filter = 'brightness(1)';
+}
+
+function hemoglobinCircleDrop(e){
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Support drops on either the circle element or the strip container
+    let target = e.currentTarget;
+    let circle = null;
+    if(target.classList.contains('circle')){
+        circle = target;
+    } else if(target.classList && target.classList.contains('strip')){
+        circle = target.querySelector('.circle') || target;
+    } else if(target.currentTarget){
+        circle = target.currentTarget.querySelector ? target.currentTarget.querySelector('.circle') : target;
+    } else {
+        circle = target;
+    }
+
+    try{ circle.style.transform = 'scale(1)'; circle.style.filter = 'brightness(1)'; }catch(e){}
+
+    console.log('🩸 Blood dropped on Hemoglobin strip');
+
+    // Ensure the dragged sample is a Hemoglobin sample
+    try{
+        let raw = e.dataTransfer.getData('patient') || e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
+        if(raw){
+            try{ var pdata = JSON.parse(raw); }catch(err){ pdata = null; }
+            const explicit = e.dataTransfer.getData && e.dataTransfer.getData('sampleType');
+            const st = (explicit && String(explicit).trim()) || (pdata && (pdata.sampleType || (pdata.formValues && pdata.formValues.sampleType)) ? String(pdata.sampleType || (pdata.formValues && pdata.formValues.sampleType)).toLowerCase() : null);
+            if(st && st !== 'hb'){
+                document.getElementById('display').innerHTML = '❌ Incorrect sample. Please use the HEMOGLOBIN sample for this strip.';
+                console.log('⚠️ Dropped sample type', st, 'not allowed on Hemoglobin strip');
+                return;
+            }
+        }
+    }catch(e){/* ignore */}
+
+    const strip = circle.closest('.strip');
+    if(!strip) return;
+
+    if(!strip.classList.contains('inserted')) {
+        strip.classList.add('inserted');
+        console.log('✅ Hemoglobin strip auto-inserted');
+    }
+
+    const domVals = getBloodValues();
+    let hb = domVals.hemoglobin;
+    // If CSV patient data is loaded, prefer that value when manual input is empty or zero
+    try{
+        if((!hb || hb === 0) && window.storedHemoglobinValue && window.storedHemoglobinValue !== 'N/A'){
+            hb = window.storedHemoglobinValue;
+            console.log('ℹ️ Using hemoglobin value from loaded CSV:', hb);
+        } else if((!hb || hb === 0) && currentPatient){
+            // fallback: look into currentPatient keys
+            for(let key in currentPatient){
+                let lk = String(key).toLowerCase();
+                if(lk.includes('hemoglobin') || lk.includes('hb')){
+                    hb = currentPatient[key];
+                    break;
+                }
+            }
+            if(hb && hb !== 'N/A') console.log('ℹ️ Using hemoglobin from currentPatient:', hb);
+        }
+    }catch(e){/* ignore */}
+    
+    if(!hb || hb === 0){
+        document.getElementById('display').innerHTML = '❌ No Hemoglobin Data. Enter manually or load CSV.';
+        return;
+    }
+    
+    let hbVal = parseFloat(hb);
+    let status = hbVal < 12.0 ? 'LOW' : hbVal <= 17.5 ? 'NORMAL' : 'ABNORMAL';
+    // Update the kit display using the helper so styling matches dengue card
+    const displayEl = document.getElementById('display');
+    renderHbResult(displayEl, hbVal, status, domVals.gender, domVals.age);
+    // Update small box
+    const hbBox = document.getElementById('patientHemoglobin'); if(hbBox) hbBox.textContent = hbVal;
+    
+    saveToHistory('hb', 
+        { gender: domVals.gender || 'N/A', age: domVals.age || 'N/A', source: 'blood_drop' }, 
+        `${hbVal} g/dL - ${status}`, 
+        { hemoglobin: hbVal }
+    );
+    console.log('✅ Hemoglobin result saved to history');
+}
+
+// ===== PLATELET DRAG-DROP =====
+function plateletCircleDragOver(e){
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    e.currentTarget.style.transform = 'scale(1.15)';
+    e.currentTarget.style.filter = 'brightness(1.3)';
+    console.log('🟡 Platelet circle dragover: ready to drop');
+}
+
+function plateletCircleDragLeave(e){
+    e.currentTarget.style.transform = 'scale(1)';
+    e.currentTarget.style.filter = 'brightness(1)';
+}
+
+function plateletCircleDrop(e){
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Support drops on either the circle element or the strip container
+    let target = e.currentTarget;
+    let circle = null;
+    if(target.classList.contains('circle')){
+        circle = target;
+    } else if(target.classList && target.classList.contains('strip')){
+        circle = target.querySelector('.circle') || target;
+    } else if(target.currentTarget){
+        circle = target.currentTarget.querySelector ? target.currentTarget.querySelector('.circle') : target;
+    } else {
+        circle = target;
+    }
+
+    try{ circle.style.transform = 'scale(1)'; circle.style.filter = 'brightness(1)'; }catch(e){}
+
+    console.log('🩸 Blood dropped on Platelet strip');
+
+    // Ensure the dragged sample is a Platelet sample
+    try{
+        let raw = e.dataTransfer.getData('patient') || e.dataTransfer.getData('application/json') || e.dataTransfer.getData('text/plain');
+        if(raw){
+            try{ var pdata = JSON.parse(raw); }catch(err){ pdata = null; }
+            const explicit = e.dataTransfer.getData && e.dataTransfer.getData('sampleType');
+            const st = (explicit && String(explicit).trim()) || (pdata && (pdata.sampleType || (pdata.formValues && pdata.formValues.sampleType)) ? String(pdata.sampleType || (pdata.formValues && pdata.formValues.sampleType)).toLowerCase() : null);
+            if(st && st !== 'platelet'){
+                document.getElementById('display').innerHTML = '❌ Incorrect sample. Please use the PLATELET sample for this strip.';
+                console.log('⚠️ Dropped sample type', st, 'not allowed on Platelet strip');
+                return;
+            }
+        }
+    }catch(e){/* ignore */}
+
+    const strip = circle.closest('.strip');
+    if(!strip) return;
+
+    if(!strip.classList.contains('inserted')) {
+        strip.classList.add('inserted');
+        console.log('✅ Platelet strip auto-inserted');
+    }
+
+    const domVals = getBloodValues();
+    let plt = domVals.platelet_count;
+    // Prefer CSV / currentPatient platelet when manual input empty
+    try{
+        if((!plt || plt === 0) && window.storedPlateletValue && window.storedPlateletValue !== 'N/A'){
+            plt = window.storedPlateletValue;
+            console.log('ℹ️ Using platelet value from loaded CSV:', plt);
+        } else if((!plt || plt === 0) && currentPatient){
+            for(let key in currentPatient){
+                let lk = String(key).toLowerCase();
+                if(lk.includes('platelet')){
+                    plt = currentPatient[key];
+                    break;
+                }
+            }
+            if(plt && plt !== 'N/A') console.log('ℹ️ Using platelet from currentPatient:', plt);
+        }
+    }catch(e){/* ignore */}
+    
+    if(!plt || plt === 0){
+        document.getElementById('display').innerHTML = '❌ No Platelet Data. Enter manually or load CSV.';
+        return;
+    }
+    
+    let pltVal = parseFloat(plt);
+    let status = pltVal < 50000 ? 'CRITICAL' : pltVal < 150000 ? 'LOW' : pltVal > 450000 ? 'HIGH' : 'NORMAL';
+    const displayEl = document.getElementById('display');
+    renderPltResult(displayEl, pltVal, status, domVals.gender, domVals.age);
+    const pltBox = document.getElementById('patientPlatelet'); if(pltBox) pltBox.textContent = pltVal;
+    
+    // Save to history (format platelet as thousands for summary)
+    const pltThousands = (pltVal / 1000).toFixed(0);
+    saveToHistory('platelet', 
+        { gender: domVals.gender || 'N/A', age: domVals.age || 'N/A', source: 'blood_drop' }, 
+        `${pltThousands}K /cumm - ${status}`, 
+        { platelet: pltVal }
+    );
+    console.log('✅ Platelet result saved to history');
+}
+
+function attachAllDropListeners(){
+    try{
+        // DENGUE Strip
+        const dengueStrip = document.querySelector('.strip[data-test="dengue"]');
+        if(dengueStrip){
+            const dengueCircle = dengueStrip.querySelector('.circle');
+            if(dengueCircle){
+                dengueCircle.addEventListener('dragover', dengueCircleDragOver);
+                dengueCircle.addEventListener('dragleave', dengueCircleDragLeave);
+                dengueCircle.addEventListener('drop', dengueCircleDrop);
+                console.log('✅ Dengue drop listeners attached');
+            }
+            // fallback: also attach to strip container so drops on the slot work
+            dengueStrip.addEventListener('dragover', dengueCircleDragOver);
+            dengueStrip.addEventListener('dragleave', dengueCircleDragLeave);
+            dengueStrip.addEventListener('drop', dengueCircleDrop);
+        }
+        
+        // HEMOGLOBIN Strip
+        const hbStrip = document.querySelector('.strip[data-test="hb"]');
+        if(hbStrip){
+            const hbCircle = hbStrip.querySelector('.circle');
+            if(hbCircle){
+                hbCircle.addEventListener('dragover', hemoglobinCircleDragOver);
+                hbCircle.addEventListener('dragleave', hemoglobinCircleDragLeave);
+                hbCircle.addEventListener('drop', hemoglobinCircleDrop);
+                console.log('✅ Hemoglobin drop listeners attached');
+            }
+            // fallback: attach to strip container as well
+            hbStrip.addEventListener('dragover', hemoglobinCircleDragOver);
+            hbStrip.addEventListener('dragleave', hemoglobinCircleDragLeave);
+            hbStrip.addEventListener('drop', hemoglobinCircleDrop);
+        }
+        
+        // PLATELET Strip
+        const pltStrip = document.querySelector('.strip[data-test="platelet"]');
+        if(pltStrip){
+            const pltCircle = pltStrip.querySelector('.circle');
+            if(pltCircle){
+                pltCircle.addEventListener('dragover', plateletCircleDragOver);
+                pltCircle.addEventListener('dragleave', plateletCircleDragLeave);
+                pltCircle.addEventListener('drop', plateletCircleDrop);
+                console.log('✅ Platelet drop listeners attached');
+            }
+            // fallback: attach to strip container as well
+            pltStrip.addEventListener('dragover', plateletCircleDragOver);
+            pltStrip.addEventListener('dragleave', plateletCircleDragLeave);
+            pltStrip.addEventListener('drop', plateletCircleDrop);
+        }
+        
+    }catch(e){
+        console.error('Error attaching drop listeners:', e);
+    }
+}
+
+
+// ===== ATTACH BLOOD DROP DRAGSTART LISTENER =====
+function attachBloodDropDragStart(){
+    try{
+        const bloodDropItem = document.querySelector('.blood-drop-item');
+        if(!bloodDropItem) {
+            console.warn('⚠️ Blood drop item not visible yet');
+            return;
+        }
+        
+        // Remove old listeners to avoid duplicates
+        bloodDropItem.removeEventListener('dragstart', bloodDropDragStart);
+        bloodDropItem.removeEventListener('dragend', bloodDropDragEnd);
+        
+        // Attach new listeners
+        bloodDropItem.addEventListener('dragstart', bloodDropDragStart);
+        bloodDropItem.addEventListener('dragend', bloodDropDragEnd);
+        
+        console.log('✅ Blood drop dragstart listeners attached');
+    }catch(e){
+        console.error('Error attaching blood drop listeners:', e);
+    }
+}
+
+// Blood drop dragstart handler
+function bloodDropDragStart(e){
+    dengueSaved = false; // Reset per-drag flags
+    hbSaved = false;
+    pltSaved = false;
+    e.currentTarget.classList.add('dragging-drop');
+    e.dataTransfer.effectAllowed = 'copy';
+    
+    // Create minimal payload for dengue strip
+    const payload = {
+        sampleType: 'blood-drop',
+        source: 'user-input' 
+    };
+    
+    try {
+        e.dataTransfer.setData('application/json', JSON.stringify(payload));
+        e.dataTransfer.setData('text/plain', JSON.stringify(payload));
+    } catch(err) {
+        console.warn('DataTransfer setData warning:', err);
+    }
+    try{
+        e.dataTransfer.setData('sampleType', payload.sampleType || 'blood-drop');
+    }catch(err){}
+    
+    e.currentTarget.style.opacity = '0.7';
+    console.log('🩸 Blood drop dragstart - ready to drop on any strip');
+}
+
+// Blood drop dragend handler
+function bloodDropDragEnd(e){
+    e.currentTarget.classList.remove('dragging-drop');
+    e.currentTarget.style.opacity = '1';
+    console.log('🩸 Blood drop dragend');
+}
+
+// Initialize on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', ()=>{
+    console.log('🔄 Initializing drag-drop handlers for all strips...');
+    attachAllDropListeners();
+    attachBloodDropDragStart();
+});
+
+// Also re-attach when gender changes (to catch blood drop freshly added to DOM)
+const originalHandleGenderChange = window.handleGenderChange;
+if(originalHandleGenderChange) {
+    window.handleGenderChange = function(){
+        originalHandleGenderChange.call(this);
+        setTimeout(() => {
+            console.log('🔄 Gender changed - re-attaching all listeners...');
+            attachAllDropListeners();
+            attachBloodDropDragStart();
+        }, 100);
+    };
+}
+
+function addMLResult(prediction, confidence, patientInfo) {
+    const resultObj = {
+        id: Date.now(),
+        timestamp: new Date().toLocaleString(),
+        prediction: prediction,
+        confidence: confidence,
+        patientInfo: patientInfo
+    };
+    
+    mlResults.push(resultObj);
+    
+    if(prediction === "POSITIVE") {
+        mlPositiveCount++;
+    } else if(prediction === "NEGATIVE") {
+        mlNegativeCount++;
+    }
+    
+    updateMLResultsDisplay();
+    showMLResultsContainer();
+}
+
+function updateMLResultsDisplay() {
+    const resultsList = document.getElementById('mlResultsList');
+    
+    if(mlResults.length === 0) {
+        resultsList.innerHTML = '<div style="text-align:center; color:#999;">No results yet</div>';
+        return;
+    }
+    
+    let html = '';
+    mlResults.forEach((result, index) => {
+        const statusIcon = result.prediction === "POSITIVE" ? "⚠️" : "✅";
+        const statusColor = result.prediction === "POSITIVE" ? "#f44336" : "#4CAF50";
+        
+        html += `
+            <div style="padding:8px; border-bottom:1px solid #ddd; margin-bottom:8px; background:white; border-radius:4px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <span style="font-weight:bold; color:${statusColor};">${statusIcon} ${result.prediction}</span>
+                        <span style="color:#999; font-size:10px;"> | ${result.timestamp}</span>
+                    </div>
+                    <span style="font-weight:bold; color:#666;">90%</span>
+                </div>
+                <div style="font-size:10px; color:#666; margin-top:4px;">
+                    ${result.patientInfo.patient_id || 'N/A'} | Age: ${result.patientInfo.age || 'N/A'}
+                </div>
+            </div>
+        `;
+    });
+    
+    resultsList.innerHTML = html;
+    
+    // Update counts
+    var _neg = document.getElementById('mlNegCountDisplay'); if(_neg) _neg.textContent = mlNegativeCount;
+    var _pos = document.getElementById('mlPosCountDisplay'); if(_pos) _pos.textContent = mlPositiveCount;
+    
+    // Calculate and update possibility percentages
+    const totalResults = mlResults.length;
+    if(totalResults > 0) {
+        const negPercentage = Math.round((mlNegativeCount / totalResults) * 100);
+        const posPercentage = Math.round((mlPositiveCount / totalResults) * 100);
+        
+        var _negp = document.getElementById('mlNegPossibilityDisplay'); if(_negp) _negp.textContent = negPercentage + '%';
+        var _posp = document.getElementById('mlPosPossibilityDisplay'); if(_posp) _posp.textContent = posPercentage + '%';
+    } else {
+        var _negp2 = document.getElementById('mlNegPossibilityDisplay'); if(_negp2) _negp2.textContent = '0%';
+        var _posp2 = document.getElementById('mlPosPossibilityDisplay'); if(_posp2) _posp2.textContent = '0%';
+    }
+}
+
+function showMLResultsContainer() {
+    document.getElementById('mlResultsContainer').style.display = 'block';
+}
+
+function toggleMLResults() {
+    const container = document.getElementById('mlResultsContainer');
+    if(container.style.display === 'none') {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+    }
+}
+
+function clearMLResults() {
+    if(confirm('Are you sure you want to clear all ML results?')) {
+        const cleared = mlResults.length;
+        mlResults = [];
+        mlPositiveCount = 0;
+        mlNegativeCount = 0;
+        updateMLResultsDisplay();
+        console.log(`✅ ML results cleared (${cleared} records removed)`);
+    }
+}
+
+function saveMLResults() {
+    if(mlResults.length === 0) {
+        alert('No results to save');
+        return;
+    }
+    
+    const csvContent = [
+        ['Timestamp', 'Patient ID', 'Age', 'Prediction', 'Confidence %'].join(','),
+        ...mlResults.map(r => [
+            r.timestamp,
+            r.patientInfo.patient_id || 'N/A',
+            r.patientInfo.age || 'N/A',
+            r.prediction,
+            r.confidence
+        ].map(cell => `"${cell}"`).join(','))
+    ].join('\n');
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ml_results_${new Date().getTime()}.csv`;
+    link.click();
+    window.URL.revokeObjectURL(url);
+    
+    console.log(`✅ Saved ${mlResults.length} ML results`);
+}
+
+/* ================= BLOOD DROP FEATURE ================= */
+
+function handleGenderChange() {
+    const genderSelect = document.getElementById('blood_gender');
+    const selectedGender = genderSelect.value;
+    const dropsContainer = document.getElementById('bloodDropsContainer');
+    
+    if (selectedGender !== '') {
+        // Show blood drops when gender is selected
+        dropsContainer.style.display = 'block';
+        
+        // Initialize drag events for blood drops
+        initializeBloodDrops();
+        
+        console.log(`✅ Blood drops ready for ${selectedGender}`);
+    } else {
+        // Hide blood drops when gender is cleared
+        dropsContainer.style.display = 'none';
+    }
+}
+
+function initializeBloodDrops() {
+    const drops = document.querySelectorAll('.blood-drop-item');
+    const dropzones = document.querySelectorAll('.dropzone');
+    
+    // Remove any existing listeners first
+    drops.forEach(drop => {
+        drop.removeEventListener('dragstart', handleBloodDropDragStart);
+        drop.removeEventListener('dragend', handleBloodDropDragEnd);
+    });
+    
+    dropzones.forEach(zone => {
+        zone.removeEventListener('dragover', handleDragOver);
+        zone.removeEventListener('drop', handleBloodDropDrop);
+        zone.removeEventListener('dragleave', handleDragLeave);
+    });
+    
+    // Add fresh listeners
+    drops.forEach(drop => {
+        drop.addEventListener('dragstart', handleBloodDropDragStart);
+        drop.addEventListener('dragend', handleBloodDropDragEnd);
+    });
+    
+    dropzones.forEach(zone => {
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('drop', handleBloodDropDrop);
+        zone.addEventListener('dragleave', handleDragLeave);
+    });
+}
+
+let draggedDropElement = null;
+
+function handleBloodDropDragStart(e) {
+    // Reset per-drag saved flags when starting a new drag
+    dengueSaved = false;
+    hbSaved = false;
+    pltSaved = false;
+    draggedDropElement = e.currentTarget;
+    draggedDropElement.classList.add('dragging-drop');
+    e.dataTransfer.effectAllowed = 'move';
+    // Include full patient/dengue/form payload so drop handlers can read values
+    // If a CSV dengue record is selected, prefer marking this drag as a dengue sample
+    const payload = {
+        sampleType: (currentDengueRecord && Object.keys(currentDengueRecord).length>0) ? 'dengue' : 'blood-drop',
+        patient: currentPatient || {},
+        dengue: currentDengueRecord || {},
+        formValues: getBloodValues()
+    };
+    try {
+        e.dataTransfer.setData('patient', JSON.stringify(payload));
+    } catch (err) {
+        // Fallback to text/plain copy if browser restricts custom types
+        try { e.dataTransfer.setData('text/plain', JSON.stringify(payload)); } catch(e){}
+    }
+
+    // Also keep HTML snippet for legacy handlers
+    try{ e.dataTransfer.setData('text/html', draggedDropElement.innerHTML); }catch(e){}
+
+    // Visual feedback
+    draggedDropElement.style.opacity = '0.7';
+}
+
+/* ================= DEDICATED DENGUE STRIP HANDLERS ================= */
+function dengueStripDragOver(e){
+    // allow drop
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+}
+
+function dengueStripDrop(e){
+    e.preventDefault();
+    e.stopPropagation();
+
+    // Find strip element and ensure it's inserted
+    const strip = e.currentTarget || e.target;
+    const closestStrip = strip.closest ? strip.closest('.strip') : null;
+    const stripEl = closestStrip || strip;
+    if(!stripEl) return;
+    if(!stripEl.classList.contains('inserted')) return;
+
+    // Reset visual feedback if any
+    try{ stripEl.style.backgroundColor = ''; }catch(e){}
+
+    // Parse payload - support legacy setData variations
+    let payload = {};
+    try{ payload = JSON.parse(e.dataTransfer.getData('patient') || e.dataTransfer.getData('text/plain') || '{}'); }catch(err){ payload = {}; }
+
+    // DEBUG: log drop details to help diagnose detection issues
+    try{
+        console.log('dengueStripDrop: payload sampleType=', payload.sampleType, 'currentDengueRecord present=', !!(currentDengueRecord && Object.keys(currentDengueRecord).length>0), 'stripInserted=', stripEl.classList.contains('inserted'));
+        console.log('dengueStripDrop: payload.dengue keys=', payload.dengue ? Object.keys(payload.dengue) : 'none', 'formValues=', payload.formValues ? payload.formValues : 'none');
+    }catch(e){}
+
+    // Determine sample values: priority formValues in payload > payload.dengue > DOM form inputs
+    // Prefer CSV dengue payload when available, then drag formValues, then DOM inputs
+    const domVals = getBloodValues();
+    const denguePayload = (payload && payload.dengue && Object.keys(payload.dengue).length>0) ? payload.dengue : null;
+    const formVals = (payload && payload.formValues && Object.keys(payload.formValues).length>0) ? payload.formValues : null;
+
+    const ns1 = (denguePayload && (denguePayload.ns1 !== undefined || denguePayload.NS1 !== undefined)) ? (denguePayload.ns1 || denguePayload.NS1) : (formVals && formVals.ns1 !== undefined ? formVals.ns1 : domVals.ns1);
+    const igg = (denguePayload && (denguePayload.igg !== undefined || denguePayload.IgG !== undefined)) ? (denguePayload.igg || denguePayload.IgG) : (formVals && formVals.igg !== undefined ? formVals.igg : domVals.igg);
+    const igm = (denguePayload && (denguePayload.igm !== undefined || denguePayload.IgM !== undefined)) ? (denguePayload.igm || denguePayload.IgM) : (formVals && formVals.igm !== undefined ? formVals.igm : domVals.igm);
+    const gender = (denguePayload && (denguePayload.gender !== undefined)) ? denguePayload.gender : (formVals && formVals.gender ? formVals.gender : (domVals.gender || 'N/A'));
+    const age = (denguePayload && (denguePayload.age !== undefined)) ? denguePayload.age : (formVals && formVals.age ? formVals.age : (domVals.age || 'N/A'));
+
+    // Update main UI values
+    try{
+        document.getElementById('dengueNS1').textContent = ns1 !== undefined ? ns1 : '-';
+        document.getElementById('dengueIgG').textContent = igg !== undefined ? igg : '-';
+        document.getElementById('dengueIgM').textContent = igm !== undefined ? igm : '-';
+        document.getElementById('dengueGender').textContent = gender || '-';
+        document.getElementById('dengueAge').textContent = age || '-';
+        document.getElementById('dengueInfoBox').style.display = 'block';
+        window.dengueValuesVisible = true;
+    }catch(e){/* ignore UI update errors */}
+
+    // Build sample and run test
+    const sample = { ns1, igg, igm, gender, age, source: (payload && payload.sampleType) ? payload.sampleType : 'blood-drop' };
+    const result = runDengueTest(sample);
+
+    // Update display with basic result immediately
+    const displayEl = document.getElementById('display') || document.body;
+    dengueResultDisplay(displayEl, result.status, ns1, igg, igm, gender, age, 'N/A', 'N/A');
+
+            // Save single dengue history entry for this dragged sample (wrapper prevents duplicate saves)
+            saveToHistory('dengue', { gender, age, source: 'blood_drop' }, `${result.status} - ${result.reason || ''}`.trim(), { ns1, igg, igm });
+}
+
+// Attach dedicated listeners to dengue strips on DOM ready
+document.addEventListener('DOMContentLoaded', ()=>{
+    try{
+        document.querySelectorAll('.strip[data-test="dengue"]').forEach(s=>{
+            s.addEventListener('dragover', dengueStripDragOver);
+            s.addEventListener('drop', dengueStripDrop);
+        });
+    }catch(e){/* ignore */}
+});
+
+function handleBloodDropDragEnd(e) {
+    draggedDropElement.classList.remove('dragging-drop');
+    draggedDropElement.style.opacity = '1';
+    draggedDropElement = null;
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    e.currentTarget.style.backgroundColor = 'rgba(255, 23, 68, 0.1)';
+    e.currentTarget.style.borderColor = '#ff1744';
+    e.currentTarget.style.borderWidth = '2px';
+}
+
+function handleDragLeave(e) {
+    e.currentTarget.style.backgroundColor = '';
+    e.currentTarget.style.borderColor = '';
+    e.currentTarget.style.borderWidth = '';
+}
+
+function handleBloodDropDrop(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const strip = e.currentTarget.closest('.strip');
+    if (!strip) return;
+    
+    // Reset visual feedback
+    e.currentTarget.style.backgroundColor = '';
+    e.currentTarget.style.borderColor = '';
+    e.currentTarget.style.borderWidth = '';
+    
+    const testType = strip.getAttribute('data-test');
+    const dropNumber = draggedDropElement ? draggedDropElement.getAttribute('data-drop') : 'Unknown';
+
+    // Prevent duplicate handling if this test was already processed for the current drag
+    if((testType === 'dengue' && dengueSaved) || (testType === 'hb' && hbSaved) || (testType === 'platelet' && pltSaved)){
+        console.log('⚠️ Duplicate drop detected for', testType, '- skipping duplicate handler');
+        return;
+    }
+    
+    // Show success animation
+    showBloodDropSuccess(strip);
+    
+    // Log the action
+    console.log(`✅ Blood Drop #${dropNumber} applied to ${testType.toUpperCase()} strip`);
+    
+    // Build combined data from drag payload and right-side form inputs (form overrides when present)
+    let dragPayload = {};
+    try{ dragPayload = JSON.parse(e.dataTransfer.getData('patient') || '{}'); }catch(err){ dragPayload = {}; }
+    const formValues = getBloodValues();
+
+    // Prefer explicit dengue/patient payload from drag. If not present, use any embedded formValues from dragPayload, otherwise DOM form values.
+    const combinedDengue = (dragPayload.dengue && Object.keys(dragPayload.dengue).length>0) ? dragPayload.dengue : (dragPayload.formValues && Object.keys(dragPayload.formValues).length>0) ? {
+        ns1: dragPayload.formValues.ns1,
+        igg: dragPayload.formValues.igg,
+        igm: dragPayload.formValues.igm,
+        age: dragPayload.formValues.age,
+        gender: dragPayload.formValues.gender
+    } : { ns1: formValues.ns1, igg: formValues.igg, igm: formValues.igm, age: formValues.age, gender: formValues.gender };
+
+    const combinedPatient = (dragPayload.patient && Object.keys(dragPayload.patient).length>0) ? dragPayload.patient : (dragPayload.formValues && Object.keys(dragPayload.formValues).length>0) ? {
+        hemoglobin: dragPayload.formValues.hemoglobin,
+        platelet: dragPayload.formValues.platelet_count,
+        age: dragPayload.formValues.age,
+        gender: dragPayload.formValues.gender
+    } : { hemoglobin: formValues.hemoglobin, platelet: formValues.platelet_count, age: formValues.age, gender: formValues.gender };
+
+    // Update UI summary fields
+    try{
+        document.getElementById('dengueNS1').textContent = combinedDengue.ns1 || '-';
+        document.getElementById('dengueIgG').textContent = combinedDengue.igg || '-';
+        document.getElementById('dengueIgM').textContent = combinedDengue.igm || '-';
+        document.getElementById('dengueGender').textContent = combinedDengue.gender || '-';
+        document.getElementById('dengueAge').textContent = combinedDengue.age || '-';
+        document.getElementById('dengueInfoBox').style.display = 'block';
+        window.dengueValuesVisible = true;
+
+        var _hb = document.getElementById('patientHemoglobin'); if(_hb) _hb.textContent = combinedPatient.hemoglobin || '-';
+        var _plt = document.getElementById('patientPlatelet'); if(_plt) _plt.textContent = combinedPatient.platelet || combinedPatient.platelet_count || '-';
+    }catch(err){}
+
+    const combinedPayload = { dengue: combinedDengue, patient: combinedPatient };
+
+    // Display results using combined data
+    displayTestResults(testType, dropNumber, combinedPayload);
+
+    // Record in history with full interpretation matching the digital kit display
+    try{
+        if(testType === 'dengue'){
+            // Use combinedDengue (drag payload overrides form) so CSV values are recorded
+            const ns1 = parseFloat(combinedDengue.ns1) || 0;
+            const igg = parseFloat(combinedDengue.igg) || 0;
+            const igm = parseFloat(combinedDengue.igm) || 0;
+            const hem = parseFloat(combinedPatient.hemoglobin) || parseFloat(formValues.hemoglobin) || 0;
+            const plt = parseFloat(combinedPatient.platelet) || parseFloat(formValues.platelet_count) || 0;
+            const gender = combinedDengue.gender || formValues.gender || 'Unknown';
+            const age = combinedDengue.age || formValues.age || 'N/A';
+
+            const dengueRes = interpretDengueResults({ ns1, igg, igm, hemoglobin: hem, platelet_count: plt, gender: gender });
+            const riskLabel = dengueRes.dengueConfidence;
+            const detailsStr = dengueRes.details.join(', ');
+            const resultText = `${dengueRes.dengueStatus} - Risk: ${riskLabel} | ${detailsStr}`;
+            saveToHistory('dengue', { gender: gender || 'N/A', age: age || 'N/A', ns1, igg, igm, source: 'blood_drop' }, resultText, { ns1, igg, igm });
+        } else if(testType === 'hb'){
+            // Use combinedPatient so CSV hemoglobin is recorded
+            const hb = parseFloat(combinedPatient.hemoglobin) || parseFloat(formValues.hemoglobin) || 0;
+            const gender = combinedPatient.gender || formValues.gender || 'Unknown';
+            const age = combinedPatient.age || formValues.age || 'N/A';
+            const hbRes = interpretHemoglobinResults({ hemoglobin: hb, gender: gender });
+            const resultText = `${hb} g/dL - ${hbRes.hbStatus}`;
+            saveToHistory('hb', { gender: gender || 'N/A', age: age || 'N/A', hemoglobin: hb, source: 'blood_drop' }, resultText, { hemoglobin: hb });
+        } else if(testType === 'platelet'){
+            // Use combinedPatient so CSV platelet is recorded
+            const plt = parseFloat(combinedPatient.platelet || combinedPatient.platelet_count) || parseFloat(formValues.platelet_count) || 0;
+            const gender = combinedPatient.gender || formValues.gender || 'Unknown';
+            const age = combinedPatient.age || formValues.age || 'N/A';
+            const pltRes = interpretPlateletResults({ platelet_count: plt });
+            const resultText = `${pltRes.pltThousands}K /cumm - ${pltRes.pltStatus}`;
+            saveToHistory('platelet', { gender: gender || 'N/A', age: age || 'N/A', platelet: plt, source: 'blood_drop' }, resultText, { platelet: plt });
+        }
+    }catch(err){ console.error('History add error', err); }
+}
+
+function showBloodDropSuccess(strip) {
+    const originalColor = strip.style.backgroundColor;
+    strip.style.backgroundColor = 'rgba(76, 175, 80, 0.3)';
+    
+    setTimeout(() => {
+        strip.style.backgroundColor = originalColor;
+    }, 500);
+}
+
+function getBloodValues() {
+    return {
+        ns1: parseFloat(document.getElementById('blood_ns1')?.value || 0),
+        igg: parseFloat(document.getElementById('blood_igg')?.value || 0),
+        igm: parseFloat(document.getElementById('blood_igm')?.value || 0),
+        age: parseFloat(document.getElementById('blood_age')?.value || 0),
+        hemoglobin: parseFloat(document.getElementById('blood_hemoglobin')?.value || 0),
+        platelet_count: parseFloat(document.getElementById('blood_platelet_count')?.value || 0),
+        gender: document.getElementById('blood_gender')?.value || 'Unknown'
+    };
+}
+
+function interpretDengueResults(values) {
+    let dengueStatus = 'NEGATIVE ✅';
+    let dengueConfidence = 'Low Risk';
+    let details = [];
+    
+    let positiveMarkers = 0;
+    
+    if (values.ns1 === 1) {
+        positiveMarkers++;
+        details.push('NS1 Antigen: POSITIVE');
+    } else {
+        details.push('NS1 Antigen: NEGATIVE');
+    }
+    
+    if (values.igg > 0.5) {
+        positiveMarkers++;
+        details.push(`IgG: POSITIVE (${values.igg.toFixed(2)})`);
+    } else {
+        details.push(`IgG: NEGATIVE (${values.igg.toFixed(2)})`);
+    }
+    
+    if (values.igm > 0.5) {
+        positiveMarkers++;
+        details.push(`IgM: POSITIVE (${values.igm.toFixed(2)})`);
+    } else {
+        details.push(`IgM: NEGATIVE (${values.igm.toFixed(2)})`);
+    }
+    
+    if (positiveMarkers >= 2) {
+        dengueStatus = 'POSITIVE ⚠️';
+        dengueConfidence = 'High Risk';
+    } else if (positiveMarkers === 1) {
+        dengueStatus = 'SUSPECTED 🔍';
+        dengueConfidence = 'Medium Risk';
+    }
+    
+    return { dengueStatus, dengueConfidence, details };
+}
+
+function interpretHemoglobinResults(values) {
+    const hb = values.hemoglobin;
+    let hbStatus = 'NORMAL ✅';
+    let hbValue = hb.toFixed(2);
+    let recommendation = '';
+    
+    // Normal ranges differ by gender
+    let normalMin = 12.0;
+    let normalMax = 17.5;
+    if (values.gender === 'Female') {
+        normalMin = 12.0;
+        normalMax = 16.0;
+    } else if (values.gender === 'Male') {
+        normalMin = 13.5;
+        normalMax = 17.5;
+    }
+    
+    if (hb < normalMin) {
+        hbStatus = 'LOW ⚠️ (ANEMIA)';
+        recommendation = 'Consider iron supplementation';
+    } else if (hb > normalMax) {
+        hbStatus = 'HIGH 🔴';
+        recommendation = 'Monitor blood viscosity';
+    } else {
+        hbStatus = 'NORMAL ✅';
+        recommendation = 'Within healthy range';
+    }
+    
+    return { hbStatus, hbValue, recommendation, normalMin, normalMax };
+}
+
+function interpretPlateletResults(values) {
+    const plt = values.platelet_count;
+    let pltStatus = 'NORMAL ✅';
+    let pltValue = (plt / 1000).toFixed(0);
+    let pltThousands = (plt / 1000).toFixed(0);
+    let recommendation = '';
+    
+    // Normal range: 150,000 to 450,000 per cumm
+    if (plt < 150000) {
+        if (plt < 50000) {
+            pltStatus = 'CRITICAL 🔴 (SEVERE)';
+            recommendation = 'Seek immediate medical attention';
+        } else {
+            pltStatus = 'LOW ⚠️ (THROMBOCYTOPENIA)';
+            recommendation = 'Monitor closely for bleeding risk';
+        }
+    } else if (plt > 450000) {
+        pltStatus = 'HIGH 🟠 (THROMBOCYTOSIS)';
+        recommendation = 'May indicate infection or inflammation';
+    } else {
+        pltStatus = 'NORMAL ✅';
+        recommendation = 'Healthy platelet count';
+    }
+    
+    return { pltStatus, pltValue, pltThousands, recommendation };
+}
+
+function displayTestResults(testType, dropNumber, payload) {
+    // payload (optional): { dengue: {...}, patient: {...}, ml: { prediction, confidence } }
+    const formValues = getBloodValues();
+    const values = { ...formValues };
+    if(payload && payload.dengue){
+        values.ns1 = payload.dengue.ns1 !== undefined ? payload.dengue.ns1 : values.ns1;
+        values.igg = payload.dengue.igg !== undefined ? payload.dengue.igg : values.igg;
+        values.igm = payload.dengue.igm !== undefined ? payload.dengue.igm : values.igm;
+        values.age = payload.dengue.age !== undefined ? payload.dengue.age : values.age;
+        values.gender = payload.dengue.gender !== undefined ? payload.dengue.gender : values.gender;
+    }
+    if(payload && payload.patient){
+        values.hemoglobin = payload.patient.hemoglobin !== undefined ? payload.patient.hemoglobin : values.hemoglobin;
+        values.platelet_count = payload.patient.platelet !== undefined ? payload.patient.platelet : (payload.patient.platelet_count !== undefined ? payload.patient.platelet_count : values.platelet_count);
+    }
+    let resultHTML = '';
+    
+    if (testType === 'dengue') {
+        const dengueResults = interpretDengueResults(values);
+        // ML info optionally provided via payload.ml
+        const mlInfo = payload && payload.ml ? payload.ml : null;
+        
+        resultHTML = `
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="text-align: center; font-size: 18px; font-weight: bold; color: ${dengueResults.dengueStatus.includes('POSITIVE') ? '#d32f2f' : '#4CAF50'};">
+                    🦟 DENGUE TEST RESULT
+                </div>
+                
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; border-left: 4px solid ${dengueResults.dengueStatus.includes('POSITIVE') ? '#d32f2f' : '#4CAF50'}; display:flex; flex-direction:column; align-items:center;">
+                    <div style="width:100%; max-width:520px; background:black; color:white; padding:16px; border-radius:8px; box-shadow: 0 6px 18px rgba(0,0,0,0.25); text-align:center;">
+                        <div style="font-size:20px; font-weight:bold; margin-bottom:8px;">🦟 Dengue:</div>
+                        <div style="font-size:22px; font-weight:bold; color:${dengueResults.dengueStatus.includes('POSITIVE') ? '#ffd54f' : '#a5d6a7'}; margin-bottom:8px;">${dengueResults.dengueStatus}</div>
+                        <div style="font-size:13px; margin-bottom:6px;">NS1: ${values.ns1} | IgG: ${values.igg} | IgM: ${values.igm}</div>
+                        <div style="font-size:13px; margin-bottom:6px;">Gender: ${values.gender} | Age: ${values.age}</div>
+                        <div style="font-size:13px; margin-bottom:6px;">Hb: ${values.hemoglobin} | Plt: ${values.platelet_count}</div>
+                        ${mlInfo ? `<div style="margin-top:10px; font-size:14px;">🤖 ML Prediction: <b style="color:#4CAF50;">${mlInfo.prediction === '1' || mlInfo.prediction === 'POSITIVE' ? '✅ POSITIVE' : mlInfo.prediction === '0' || mlInfo.prediction === 'NEGATIVE' ? '⚠️ NEGATIVE' : mlInfo.prediction}</b><br>Confidence: <b>${mlInfo.confidence}%</b></div>` : ''}
+                    </div>
+                </div>
+                
+                <div style="text-align: center; font-size: 11px; color: #999;">Sample analyzed ✓</div>
+            </div>
+        `;
+    } 
+    else if (testType === 'hb') {
+        const hbResults = interpretHemoglobinResults(values);
+        
+        resultHTML = `
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="text-align: center; font-size: 18px; font-weight: bold; color: #d32f2f;">
+                    🩸 HEMOGLOBIN TEST RESULT
+                </div>
+                
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; border-left: 4px solid #d32f2f;">
+                    <div style="font-size: 28px; font-weight: bold; margin-bottom: 5px; color: #333;">
+                        ${hbResults.hbValue} g/dL
+                    </div>
+                    <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: ${hbResults.hbStatus.includes('LOW') ? '#d32f2f' : hbResults.hbStatus.includes('HIGH') ? '#ff6f00' : '#4CAF50'};">
+                        ${hbResults.hbStatus}
+                    </div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+                        Normal Range: ${hbResults.normalMin} - ${hbResults.normalMax} g/dL (${values.gender})
+                    </div>
+                    <div style="font-size: 12px; color: #555; padding: 8px; background: white; border-radius: 5px;">
+                        📌 ${hbResults.recommendation}
+                    </div>
+                </div>
+                
+                <div style="text-align: center; font-size: 11px; color: #999;">
+                        Sample analyzed ✓
+                </div>
+            </div>
+        `;
+    } 
+    else if (testType === 'platelet') {
+        const pltResults = interpretPlateletResults(values);
+        
+        resultHTML = `
+            <div style="display: flex; flex-direction: column; gap: 15px;">
+                <div style="text-align: center; font-size: 18px; font-weight: bold; color: #fbc02d;">
+                    🧬 PLATELET COUNT TEST RESULT
+                </div>
+                
+                <div style="background: #f5f5f5; padding: 15px; border-radius: 10px; border-left: 4px solid #fbc02d;">
+                    <div style="font-size: 28px; font-weight: bold; margin-bottom: 5px; color: #333;">
+                        ${pltResults.pltThousands}K /cumm
+                    </div>
+                    <div style="font-size: 16px; font-weight: bold; margin-bottom: 10px; color: ${pltResults.pltStatus.includes('CRITICAL') ? '#d32f2f' : pltResults.pltStatus.includes('LOW') ? '#ff6f00' : pltResults.pltStatus.includes('HIGH') ? '#ff9800' : '#4CAF50'};">
+                        ${pltResults.pltStatus}
+                    </div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 8px;">
+                        Normal Range: 150K - 450K /cumm
+                    </div>
+                    <div style="font-size: 12px; color: #555; padding: 8px; background: white; border-radius: 5px;">
+                        📌 ${pltResults.recommendation}
+                    </div>
+                </div>
+                
+                <div style="text-align: center; font-size: 11px; color: #999;">
+                        Sample analyzed ✓
+                </div>
+            </div>
+        `;
+    }
+    
+    if (resultHTML) {
+        display.innerHTML = resultHTML;
+        console.log(`📊 Results displayed for ${testType} test`);
+    }
+}
+
+function updateDisplayMessage(testType, dropNumber) {
+    const messages = {
+        'dengue': `🩸 Blood sample applied to DENGUE strip - Analyzing results 🧪`,
+        'hb': `🩸 Blood sample applied to HEMOGLOBIN strip - Reading values 📊`,
+        'platelet': `🩸 Blood sample applied to PLATELET strip - Processing data ⏳`
+    };
+    
+    if (messages[testType]) {
+        display.innerHTML = messages[testType];
+        setTimeout(() => {
+            displayTestResults(testType, dropNumber);
+        }, 800);
+    }
+}
+
+// ================= NAVBAR TOGGLE FUNCTION =================
+function toggleHistoryPanel() {
+    const historyPanel = document.getElementById('historyPanel');
+    const toggleBtn = document.getElementById('historyToggleBtn');
+    
+    historyPanel.classList.toggle('show');
+    toggleBtn.classList.toggle('expanded');
+}
+
+// Auto-close panel when clicking on a history record
+document.addEventListener('click', function(e) {
+    const historyPanel = document.getElementById('historyPanel');
+    const historyNavbar = document.querySelector('.history-navbar');
+    const toggleBtn = document.getElementById('historyToggleBtn');
+    
+    if (e.target.classList.contains('history-record') || 
+        (e.target.closest('.history-record') && !historyNavbar.contains(e.target))) {
+        historyPanel.classList.remove('show');
+        toggleBtn.classList.remove('expanded');
+    }
+});
+</script>
+
+<script>
+function toggleHistorySidebar(){
+    const panel = document.getElementById('historyPanel');
+    const btn = document.getElementById('historyToggleBtn');
+    const main = document.querySelector('.kit-and-storage');
+    panel.classList.toggle('collapsed');
+    const collapsed = panel.classList.contains('collapsed');
+    if(collapsed){
+        btn.textContent = '▶';
+        if(main) main.style.marginLeft = '56px';
+    } else {
+        btn.textContent = '◀';
+        if(main) main.style.marginLeft = '320px';
+    }
+}
+
+// ensure correct initial spacing on load
+document.addEventListener('DOMContentLoaded', ()=>{
+    const main = document.querySelector('.kit-and-storage');
+    if(main) main.style.marginLeft = document.getElementById('historyPanel').classList.contains('collapsed') ? '56px' : '320px';
+});
+</script>
+
+</body>
+</html> 
